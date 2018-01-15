@@ -1,6 +1,6 @@
 
 const { expect } = require('chai');
-const inputParser = require('../index');
+const { parser, consts } = require('../index');
 const sinon = require('sinon');
 
 describe('Main', function () {
@@ -31,7 +31,7 @@ describe('Main', function () {
             const links = pipeline.flowInput.files.links.map(f => new Array(f));
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.input).to.deep.equal(links);
         });
         it('should parse batch input which is not an array', function () {
@@ -62,7 +62,7 @@ describe('Main', function () {
             const input = [200, pipeline.flowInput.files, false];
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.deep.equal(false);
             expect(result.input).to.deep.equal(input);
         });
@@ -96,7 +96,7 @@ describe('Main', function () {
             const array = pipeline.flowInput.files.links.map(f => new Array({ a: { c: f } }));
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.input).to.deep.equal(array);
         });
         it('should parse batch input as array', function () {
@@ -129,7 +129,7 @@ describe('Main', function () {
             const array = pipeline.flowInput.files.links.map(f => new Array({ a: { b: [1, 2, [f]] } }));
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.input).to.deep.equal(array);
         });
         it('should parse batch input as array', function () {
@@ -162,7 +162,7 @@ describe('Main', function () {
             const array = pipeline.flowInput.files.links.map(f => new Array({ a: [{ b: f }] }));
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.input).to.deep.equal(array);
         });
         it('should parse batch input as raw', function () {
@@ -191,7 +191,7 @@ describe('Main', function () {
             const array = [1, 2, 3, 4, 5].map(i => new Array(1).fill(i, 0, 1));
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.input).to.deep.equal(array);
         });
         it('should parse node result to batch', function () {
@@ -238,9 +238,9 @@ describe('Main', function () {
                 }
             };
             const node = pipeline.nodes[1];
-            const parentOutput = [{ node: 'green', type: 'waitBatch', result: [1, 2, 3, 4, 5] },];
+            const parentOutput = [{ node: 'green', type: consts.relations.WAIT_BATCH, result: [1, 2, 3, 4, 5] },];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(5);
         });
@@ -260,9 +260,9 @@ describe('Main', function () {
             };
             const array = [6, 7, 8, 9, 10];
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: 'waitNode', result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_NODE, result: array }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal([array, 512]);
         });
@@ -282,9 +282,9 @@ describe('Main', function () {
             };
             const array = { data: [6, 7, 8, 9, 10] };
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: 'waitNode', result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_NODE, result: array }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal([array.data, 512]);
         });
@@ -304,9 +304,9 @@ describe('Main', function () {
             };
             const array = { data: [6, 7, 8, 9, 10] };
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: 'waitAny', result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY, result: array }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal([array.data, 512]);
         });
@@ -327,9 +327,9 @@ describe('Main', function () {
             const array = { data: [6, 7, 8, 9, 10] };
             const expected = array.data.map(i => [i, 512]);
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: 'waitBatch', result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: array }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(true);
             expect(result.input).to.deep.equal(expected);
         });
@@ -348,7 +348,7 @@ describe('Main', function () {
             }
             const node = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: node.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal(["test"]);
         });
@@ -365,7 +365,7 @@ describe('Main', function () {
             }
             const node = pipeline.nodes[0];
             const options = Object.assign({}, { nodeInput: node.input });
-            const result = inputParser.parse(options);
+            const result = parser.parse(options);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal(node.input);
         });
@@ -382,13 +382,13 @@ describe('Main', function () {
             }
             const node = pipeline.nodes[0];
             const options = Object.assign({}, { nodeInput: node.input });
-            const result = inputParser.parse(null);
+            const result = parser.parse(null);
             expect(result.batch).to.equal(false);
             expect(result.input).to.deep.equal(node.input);
         });
         it('should throw type error', function () {
             expect(() => {
-                inputParser.parse("string");
+                parser.parse("string");
             }).to.throw(TypeError, 'options');
         });
     });
@@ -419,7 +419,7 @@ describe('Main', function () {
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
             expect(() => {
-                inputParser.checkFlowInput(options);
+                parser.checkFlowInput(options);
             }).to.throw(`unable to find flowInput.not_such_object`);
         });
         it('should not throw check Flow Input when is valid', function () {
@@ -447,7 +447,7 @@ describe('Main', function () {
             }
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
-            inputParser.checkFlowInput(options);
+            parser.checkFlowInput(options);
             expect(options.nodeInput).to.deep.equal(firstNode.input);
         });
         it('should not throw check Flow Input node input is null', function () {
@@ -475,7 +475,7 @@ describe('Main', function () {
             }
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: null });
-            inputParser.checkFlowInput(options);
+            parser.checkFlowInput(options);
             expect(options.nodeInput).to.be.null;
         });
     });
@@ -511,7 +511,7 @@ describe('Main', function () {
             const node = 'black';
             const lastNode = pipeline.nodes.find(n => n.nodeName === node);
             const nodeNames = pipeline.nodes.filter(n => n.nodeName !== node).map(n => n.nodeName);
-            const nodes = inputParser.extractNodesFromInput(lastNode.input);
+            const nodes = parser.extractNodesFromInput(lastNode.input);
             const names = nodes.map(n => n.nodeName);
             expect(names).to.deep.equal(nodeNames);
         });
@@ -538,7 +538,7 @@ describe('Main', function () {
             const node = 'black';
             const lastNode = pipeline.nodes.find(n => n.nodeName === node);
             const nodeNames = pipeline.nodes.filter(n => n.nodeName !== node).map(n => n.nodeName);
-            const nodes = inputParser.extractNodesFromInput(lastNode.input[0]);
+            const nodes = parser.extractNodesFromInput(lastNode.input[0]);
             const names = nodes.map(n => n.nodeName);
             expect(names).to.deep.equal(nodeNames);
         });
@@ -565,7 +565,7 @@ describe('Main', function () {
             const node = 'black';
             const lastNode = pipeline.nodes.find(n => n.nodeName === node);
             const nodeNames = pipeline.nodes.filter(n => n.nodeName !== node).map(n => n.nodeName);
-            const nodes = inputParser.extractNodesFromInput(lastNode.input[0]);
+            const nodes = parser.extractNodesFromInput(lastNode.input[0]);
             const names = nodes.map(n => n.nodeName);
             expect(names).to.deep.equal(nodeNames);
         });
@@ -600,7 +600,7 @@ describe('Main', function () {
             const node = 'black';
             const lastNode = pipeline.nodes.find(n => n.nodeName === node);
             const nodeNames = pipeline.nodes.filter(n => n.nodeName !== node).map(n => n.nodeName);
-            const nodes = inputParser.extractNodesFromInput(lastNode.input);
+            const nodes = parser.extractNodesFromInput(lastNode.input);
             const names = nodes.map(n => n.nodeName);
             expect(names).to.deep.equal(nodeNames);
         });
@@ -635,7 +635,7 @@ describe('Main', function () {
             const node = 'black';
             const lastNode = pipeline.nodes.find(n => n.nodeName === node);
             const nodeNames = pipeline.nodes.filter(n => n.nodeName !== node).map(n => n.nodeName);
-            const nodes = inputParser.extractNodesFromInput(lastNode.input);
+            const nodes = parser.extractNodesFromInput(lastNode.input);
             const names = nodes.map(n => n.nodeName);
             expect(names).to.deep.equal(nodeNames);
         });
@@ -666,7 +666,7 @@ describe('Main', function () {
                 }
             };
             const firstNode = pipeline.nodes[0];
-            const result = inputParser._isBatch(firstNode.input[0]);
+            const result = parser._isBatch(firstNode.input[0]);
             expect(result).to.equal(true);
         });
         it('should return false when is not batch', function () {
@@ -694,7 +694,7 @@ describe('Main', function () {
                 }
             };
             const node = pipeline.nodes[0];
-            const result = inputParser._isBatch(node.input[0]);
+            const result = parser._isBatch(node.input[0]);
             expect(result).to.equal(false);
         });
         it('should return true when is node', function () {
@@ -711,7 +711,7 @@ describe('Main', function () {
                 ]
             };
             const node = pipeline.nodes[0];
-            const result = inputParser._isNode(node.input[0]);
+            const result = parser._isNode(node.input[0]);
             const nodeName = node.input[0].substr(1);
             expect(result.isNode).to.equal(true);
             expect(result.nodeName).to.equal(nodeName);
@@ -730,7 +730,7 @@ describe('Main', function () {
                 ]
             };
             const node = pipeline.nodes[0];
-            const result = inputParser._isNode(node.input[0]);
+            const result = parser._isNode(node.input[0]);
             expect(result.isNode).to.equal(false);
         });
         it('should return true when is flowInput', function () {
@@ -752,7 +752,7 @@ describe('Main', function () {
                 }
             }
             const node = pipeline.nodes[0];
-            const result = inputParser._isFlowInput(node.input[0]);
+            const result = parser._isFlowInput(node.input[0]);
             expect(result).to.equal(true);
         });
         it('should return false when is not flowInput', function () {
@@ -769,7 +769,7 @@ describe('Main', function () {
                 ]
             }
             const node = pipeline.nodes[0];
-            const result = inputParser._isFlowInput(node.input[0]);
+            const result = parser._isFlowInput(node.input[0]);
             expect(result).to.equal(false);
         });
         it('should return true when is reference', function () {
@@ -787,7 +787,7 @@ describe('Main', function () {
                 ]
             }
             const node = pipeline.nodes[0];
-            const result = inputParser._isReference(node.input[0]);
+            const result = parser._isReference(node.input[0]);
             expect(result).to.equal(true);
         });
         it('should return false when is not reference', function () {
@@ -804,7 +804,7 @@ describe('Main', function () {
                 ]
             }
             const node = pipeline.nodes[0];
-            const result = inputParser._isReference(node.input[0]);
+            const result = parser._isReference(node.input[0]);
             expect(result).to.equal(false);
         });
     });
