@@ -1,7 +1,7 @@
 {
   "name": "@hkube/parsers",
   "version": "1.0.0",
-  "description": "",
+  "description": "pipeline and nodes input parser",
   "main": "index.js",
   "scripts": {
     "test": "mocha test --colors --recursive --exit",
