@@ -282,9 +282,9 @@ describe('Main', function () {
                     }
                 ]
             };
-            const array = [6, 7, 8, 9, 10];
+            const parentResult = { storageInfo: { path: 'link_to_data' } };
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_NODE, result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_NODE, result: parentResult }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
             const result = parser.parse(options);
             const key = Object.keys(result.storage)[0];
@@ -292,7 +292,7 @@ describe('Main', function () {
             expect(result.input).to.deep.equal(expectedInput);
             expect(result.batch).to.equal(false);
             expect(result.storage).to.have.property(key);
-            expect(result.storage[key].accessor).to.deep.equal(array);
+            expect(result.storage[key].storageInfo).to.deep.equal(parentResult.storageInfo);
             expect(result.storage[key].path).to.equal('data');
         });
         it('should parse node result of waitAny result', function () {
@@ -309,9 +309,9 @@ describe('Main', function () {
                     }
                 ]
             };
-            const array = [6, 7, 8, 9, 10];
+            const parentResult = { storageInfo: { path: 'link_to_data' } };
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY, result: array }];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY, result: parentResult }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
             const result = parser.parse(options);
             const key = Object.keys(result.storage)[0];
@@ -333,16 +333,16 @@ describe('Main', function () {
                     }
                 ]
             };
-            const array = [6, 7, 8, 9, 10];
+            const parentResult = [{ storageInfo: { path: 'link_to_data1' } }, { storageInfo: { path: 'link_to_data2' } }, { storageInfo: { path: 'link_to_data3' } }];
             const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: array }];
-            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: parentResult }];
+            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput });
             const result = parser.parse(options);
             const key = Object.keys(result.storage)[0];
             expect(result.batch).to.equal(true);
-            expect(result.input).to.have.lengthOf(array.length)
+            expect(result.input).to.have.lengthOf(parentResult.length)
             expect(result.storage).to.have.property(key);
-            expect(result.storage[key]).to.have.property('accessor');
+            expect(result.storage[key]).to.have.property('storageInfo');
             expect(result.storage[key]).to.have.property('path');
         });
         it('should parse node result of waitAnyBatch result', function () {
@@ -374,7 +374,7 @@ describe('Main', function () {
             };
 
             const node = pipeline.nodes[0];
-            const array = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+            const array = [[{ storageInfo: { path: 'link_to_data1' } }], [{ storageInfo: { path: 'link_to_data2' } }], [{ storageInfo: { path: 'link_to_data3' } }]];
             array.forEach(a => {
                 const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: a }];
                 const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
@@ -383,10 +383,10 @@ describe('Main', function () {
                 const keys = Object.keys(result.storage);
                 const key = keys[0];
                 expect(result.batch).to.equal(true);
-                expect(result.input).to.have.lengthOf(array.length);
+                expect(result.input).to.have.lengthOf(a.length);
                 expect(result.input[0]).to.have.lengthOf(node.input.length);
                 expect(result.storage).to.have.property(key);
-                expect(result.storage[key]).to.have.property('accessor');
+                expect(result.storage[key]).to.have.property('storageInfo');
                 expect(result.storage[key]).to.have.property('path');
 
             })
@@ -420,9 +420,9 @@ describe('Main', function () {
             };
 
             const node = pipeline.nodes[0];
-            const waitNode = 128;
-            const waitAny = 9;
-            const waitAnyBatch = [7, 8, 9];
+            const waitNode = { storageInfo: { path: 'link_to_data1' } };
+            const waitAny = { storageInfo: { path: 'link_to_data1' } };
+            const waitAnyBatch = [{ storageInfo: { path: 'link_to_data1' } }, { storageInfo: { path: 'link_to_data1' } }, { storageInfo: { path: 'link_to_data1' } }];
             const parentOutput = [
                 { node: 'yellow', type: consts.relations.WAIT_NODE, result: waitNode },
                 { node: 'yellow', type: consts.relations.WAIT_ANY, result: waitAny },
@@ -447,22 +447,22 @@ describe('Main', function () {
             const key7 = result.input[2][1].substr(2);
             const key8 = result.input[2][2].substr(2);
 
-            expect(result.storage[key0].accessor).to.deep.equal(waitNode);
-            expect(result.storage[key1].accessor).to.deep.equal(waitAny);
-            expect(result.storage[key2].accessor).to.deep.equal(waitAnyBatch[0]);
-            expect(result.storage[key3].accessor).to.deep.equal(waitNode);
-            expect(result.storage[key4].accessor).to.deep.equal(waitAny);
-            expect(result.storage[key5].accessor).to.deep.equal(waitAnyBatch[1]);
-            expect(result.storage[key6].accessor).to.deep.equal(waitNode);
-            expect(result.storage[key7].accessor).to.deep.equal(waitAny);
-            expect(result.storage[key8].accessor).to.deep.equal(waitAnyBatch[2]);
+            expect(result.storage[key0].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key1].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
+            expect(result.storage[key3].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key4].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key5].storageInfo).to.deep.equal(waitAnyBatch[1].storageInfo);
+            expect(result.storage[key6].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key7].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key8].storageInfo).to.deep.equal(waitAnyBatch[2].storageInfo);
 
             expect(result.input[0][3]).to.deep.equal(pipeline.flowInput.files.links);
             expect(result.input[1][3]).to.deep.equal(pipeline.flowInput.files.links);
             expect(result.input[2][3]).to.deep.equal(pipeline.flowInput.files.links);
 
             expect(result.storage).to.have.property(key);
-            expect(result.storage[key]).to.have.property('accessor');
+            expect(result.storage[key]).to.have.property('storageInfo');
             expect(result.storage[key]).to.have.property('path');
 
         });
