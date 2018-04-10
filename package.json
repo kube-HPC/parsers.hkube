@@ -4,14 +4,15 @@
   "description": "pipeline and nodes input parser",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test --colors --recursive --exit",
-    "test-travis": "./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- -R spec test --exit",
+    "test": "mocha tests --colors --recursive --exit",
+    "test-travis": "./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- -R spec tests --exit",
     "build": "npm publish"
   },
   "author": "Nassi Harel",
   "license": "ISC",
   "dependencies": {
     "clone": "^2.1.1",
+    "flat": "^4.0.0",
     "object-path": "^0.11.4"
   },
   "devDependencies": {
