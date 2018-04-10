@@ -34,6 +34,37 @@ describe('Main', function () {
             const result = parser.parse(options);
             expect(result.input).to.deep.equal(links);
         });
+        it('should replace flowInput', function () {
+            const pipeline = {
+                "nodes": [
+                    {
+                        "nodeName": "green",
+                        "algorithmName": "green-alg",
+                        "input": [
+                            "#@flowInput.files.links", "@flowInput.x", 4, false, "@flowInput.files"
+                        ]
+                    },
+                ],
+                "flowInput": {
+                    "x": 3,
+                    "y": false,
+                    "files": {
+                        "links": [
+                            "links-1",
+                            "links-2",
+                            "links-3",
+                            "links-4",
+                            "links-5"
+                        ]
+                    }
+                }
+            }
+            const links = pipeline.flowInput.files.links.map(f => new Array(f));
+            const firstNode = pipeline.nodes[0];
+            const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
+            const result = parser.replaceFlowInput(options);
+            expect('{"flowInput.files.links":{"type":"array","size":5},"flowInput.x":{"type":"number"},"flowInput.files":{"type":"object"}}').to.equals(JSON.stringify(result));
+        });
         it('should parse batch input which is not an array', function () {
             const pipeline = {
                 "nodes": [
