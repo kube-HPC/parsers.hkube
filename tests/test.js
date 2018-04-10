@@ -4,7 +4,7 @@ const { parser, consts } = require('../index');
 const sinon = require('sinon');
 
 describe('Main', function () {
-    xdescribe('Parse', function () {
+    describe('Parse', function () {
         it('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
@@ -33,6 +33,61 @@ describe('Main', function () {
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
             const result = parser.parse(options);
             expect(result.input).to.deep.equal(links);
+        });
+        it('should replace flowInput', function () {
+            const pipeline = {
+                "name": "multadd",
+                "nodes": [
+                    {
+                        "nodeName": "evaladd",
+                        "algorithmName": "eval-alg",
+                        "input": [
+                            "@flowInput.addInput",
+                            "@flowInput.addInput",
+                            "@evalmul",
+                            "#@flowInput.files.links"
+                        ],
+                        "extraData": {
+                            "code": [
+                                "(input) => {",
+                                "const result = input[0] + input[1]",
+                                "return result;}"
+                            ]
+                        }
+                    },
+                    {
+                        "nodeName": "evalmul",
+                        "algorithmName": "eval-alg",
+                        "input": [
+                            "@flowInput.multInput",
+                            "@flowInput.addInput",
+                            "@flowInput.files"
+                        ],
+                        "extraData": {
+                            "code": [
+                                "(input) => {",
+                                "const result = input[0] * input[1]",
+                                "return result;}"
+                            ]
+                        }
+                    }
+                ],
+                "flowInput": {
+                    "addInput": 3,
+                    "multInput": 5,
+                    "files": {
+                        "links": [
+                            "links-1",
+                            "links-2",
+                            "links-3",
+                            "links-4",
+                            "links-5"
+                        ]
+                    }
+                }
+            };
+            const result = parser.replaceFlowInput(pipeline);
+            expect('{"flowInput.addInput":{"type":"number"},"flowInput.files.links":{"type":"array","size":5},"flowInput.multInput":{"type":"number"},"flowInput.files":{"type":"object"}}').to.equals(JSON.stringify(result));
         });
         it('should parse batch input which is not an array', function () {
             const pipeline = {
