@@ -4,7 +4,7 @@ const { parser, consts } = require('../index');
 const sinon = require('sinon');
 
 describe('Main', function () {
-    describe('Parse', function () {
+    xdescribe('Parse', function () {
         it('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
@@ -580,7 +580,7 @@ describe('Main', function () {
             }).to.throw(TypeError, 'options');
         });
     });
-    describe('NewParse', function () {
+    xdescribe('NewParse', function () {
         it('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
