@@ -1,6 +1,6 @@
 {
   "name": "@hkube/parsers",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "pipeline and nodes input parser",
   "main": "index.js",
   "scripts": {
