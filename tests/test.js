@@ -4,7 +4,508 @@ const { parser, consts } = require('../index');
 const sinon = require('sinon');
 
 describe('Main', function () {
-    describe('NewParse', function () {
+    describe('Parse', function () {
+        it('should parse node result to another node', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "@yellow",
+                            512
+                        ]
+                    }
+                ]
+            };
+
+            const node = pipeline.nodes[0];
+            const parentOutput = [{
+                node: 'yellow',
+                type: consts.relations.WAIT_NODE,
+                result: {
+                    "metadata": {
+                        "yellow": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                }
+            }];
+            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
+            const result = parser.parse(options);
+            const key = Object.keys(result.storage)[0];
+            const expectedInput = [`$$${key}`, 512];
+            expect(result.input).to.deep.equal(expectedInput);
+            expect(result.batch).to.equal(false);
+        });
+        it('should parse node result of waitNode result', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "@yellow.data",
+                            512
+                        ]
+                    }
+                ]
+            };
+            const node = pipeline.nodes[0];
+            const parentOutput = [{
+                node: 'yellow',
+                type: consts.relations.WAIT_NODE,
+                result: {
+                    "metadata": {
+                        "yellow": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
+                        "path": 'link_to_data'
+                    }
+                }
+            }];
+            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
+            const result = parser.parse(options);
+            const key = Object.keys(result.storage)[0];
+            const expectedInput = [`$$${key}`, 512];
+            expect(result.input).to.deep.equal(expectedInput);
+            expect(result.batch).to.equal(false);
+            expect(result.storage).to.have.property(key);
+            expect(result.storage[key].storageInfo).to.deep.equal(parentOutput[0].result.storageInfo);
+            expect(result.storage[key].path).to.equal('data');
+        });
+        it('should parse node result of waitAny result', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "*@yellow.data",
+                            512
+                        ]
+                    }
+                ]
+            };
+            const node = pipeline.nodes[0];
+            const parentOutput = [{
+                node: 'yellow',
+                type: consts.relations.WAIT_ANY,
+                result: {
+                    "metadata": {
+                        "yellow": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
+                        "path": 'link_to_data'
+                    }
+                }
+            }];
+            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
+            const result = parser.parse(options);
+            const key = Object.keys(result.storage)[0];
+            const expectedInput = [`$$${key}`, 512];
+            expect(result.batch).to.equal(false);
+            expect(result.input).to.deep.equal(expectedInput);
+        });
+        it('should parse node result of waitBatch result', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "#@yellow.data",
+                            512
+                        ]
+                    }
+                ]
+            };
+            const parentResult = [{
+                metadata: {
+                    yellow: { type: "array", size: 5 }
+                },
+                storageInfo: {
+                    Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            },
+            {
+                metadata: {
+                    yellow: { type: "array", size: 5 }
+                },
+                storageInfo: {
+                    Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            },
+            {
+                metadata: {
+                    yellow: { type: "array", size: 5 }
+                },
+                storageInfo: {
+                    Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            }];
+            const node = pipeline.nodes[0];
+            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: parentResult }];
+            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput });
+            const result = parser.parse(options);
+            const key = Object.keys(result.storage)[0];
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(parentResult.length);
+            expect(result.storage[key]).to.have.property('storageInfo');
+            expect(result.storage[key]).to.have.property('path');
+        });
+        it('should parse node result of waitAnyBatch result', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            true,
+                            "*#@yellow.data",
+                            512,
+                            "@flowInput.files.links"
+                        ]
+                    }
+                ],
+                "flowInput": {
+                    "metadata": {
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                }
+            };
+            const node = pipeline.nodes[0];
+            const array =
+                [{
+                    metadata: {
+                        "yellow.data": { type: "array", size: 5 }
+                    },
+                    storageInfo: {
+                        Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                },
+                {
+                    metadata: {
+                        "yellow.data": { type: "array", size: 5 }
+                    },
+                    storageInfo: {
+                        Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                },
+                {
+                    metadata: {
+                        "yellow.data": { type: "array", size: 5 }
+                    },
+                    storageInfo: {
+                        Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                }]
+
+            array.forEach(a => {
+                const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: a }];
+                const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
+                const result = parser.parse(options);
+                const length = array[0].length;
+                const keys = Object.keys(result.storage);
+                const key = keys[0];
+                expect(result.batch).to.equal(true);
+                expect(result.input).to.have.lengthOf(5);
+                expect(result.input[0].input).to.have.lengthOf(node.input.length);
+                expect(result.storage).to.have.property(key);
+                expect(result.storage[key]).to.have.property('storageInfo');
+                expect(result.storage[key]).to.have.property('path');
+            })
+        });
+        it('should parse node result of waitNode/waitAny/waitAnyBatch result', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "@yellow.data",
+                            "*@yellow.data",
+                            "*#@yellow.data",
+                            "@flowInput.files.links"
+                        ]
+                    }
+                ],
+                "flowInput": {
+                    "metadata": {
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
+                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                }
+            };
+
+            const node = pipeline.nodes[0];
+            const waitNode = {
+                metadata: {
+                    "flowInput.files.links": { type: "array", size: 5 }
+                },
+                storageInfo: { path: 'link_to_data1' }
+            };
+            const waitAny = {
+                metadata: {
+                    "flowInput.files.links": { type: "array", size: 5 }
+                },
+                storageInfo: { path: 'link_to_data1' }
+            };
+            const waitAnyBatch = [
+                {
+                    metadata: {
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    }, storageInfo: { path: 'link_to_data1' }
+                },
+                {
+                    metadata: {
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    }, storageInfo: { path: 'link_to_data1' }
+                },
+                {
+                    metadata: {
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    }, storageInfo: { path: 'link_to_data1' }
+                }];
+
+            const parentOutput = [
+                { node: 'yellow', type: consts.relations.WAIT_NODE, result: waitNode },
+                { node: 'yellow', type: consts.relations.WAIT_ANY, result: waitAny },
+                { node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: waitAnyBatch }
+            ];
+            const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
+            const nodes = parser.extractNodesFromInput(node.input);
+            const result = parser.parse(options);
+            const keys = Object.keys(result.storage);
+            const key = keys[0];
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(waitAnyBatch.length);
+            expect(result.input[0].input).to.have.lengthOf(node.input.length);
+
+            const key0 = result.input[0].input[0].substr(2);
+            const key1 = result.input[0].input[1].substr(2);
+            const key2 = result.input[0].input[2].substr(2);
+            const key3 = result.input[1].input[0].substr(2);
+            const key4 = result.input[1].input[1].substr(2);
+            const key5 = result.input[1].input[2].substr(2);
+            const key6 = result.input[2].input[0].substr(2);
+            const key7 = result.input[2].input[1].substr(2);
+            const key8 = result.input[2].input[2].substr(2);
+
+            expect(result.storage[key0].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key1].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
+            expect(result.storage[key3].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key4].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key5].storageInfo).to.deep.equal(waitAnyBatch[1].storageInfo);
+            expect(result.storage[key6].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.storage[key7].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.storage[key8].storageInfo).to.deep.equal(waitAnyBatch[2].storageInfo);
+
+            expect(result.storage).to.have.property(key);
+            expect(result.storage[key]).to.have.property('storageInfo');
+            expect(result.storage[key]).to.have.property('path');
+
+        });
+        it('should parse simple input', function () {
+            const pipeline = {
+                "name": "flow1",
+                "nodes": [
+                    {
+                        "nodeName": "white",
+                        "algorithmName": "black-alg",
+                        "input": [
+                            "test"
+                        ]
+                    }
+                ]
+            }
+            const node = pipeline.nodes[0];
+            const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: node.input });
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(false);
+            expect(result.input).to.deep.equal(["test"]);
+        });
+        it('should parse empty input', function () {
+            const pipeline = {
+                "name": "flow1",
+                "nodes": [
+                    {
+                        "nodeName": "white",
+                        "algorithmName": "black-alg",
+                        "input": []
+                    }
+                ]
+            }
+            const node = pipeline.nodes[0];
+            const options = Object.assign({}, { nodeInput: node.input });
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(false);
+            expect(result.input).to.deep.equal(node.input);
+        });
+        it('should throw type error on string', function () {
+            expect(() => {
+                parser.parse("string");
+            }).to.throw(TypeError, 'options');
+        });
+        it('should throw type error on null', function () {
+            expect(() => {
+                parser.parse(null);
+            }).to.throw(TypeError, 'options');
+        });
+        it('should replaceFlowInput', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "#@flowInput.files.links",
+                            { data: { prop: "@flowInput.x" } },
+                            "@flowInput.x",
+                            "@flowInput.y",
+                            "@flowInput",
+                            2,
+                            false,
+                            ["@flowInput"]
+                        ]
+                    }
+                ],
+                "flowInput": {
+                    "x": 3,
+                    "y": false,
+                    "files": {
+                        "links": [
+                            "links-1",
+                            "links-2",
+                            "links-3",
+                            "links-4",
+                            "links-5"
+                        ]
+                    }
+                },
+            };
+            const metadata = parser.replaceFlowInput(pipeline);
+            const keys = Object.keys(metadata);
+            expect(metadata[keys[0]].type).to.equal('array');
+            expect(metadata[keys[0]].size).to.equal(5);
+            expect(metadata[keys[1]].type).to.equal('number');
+            expect(metadata[keys[2]].type).to.equal('boolean');
+            expect(metadata[keys[3]].type).to.equal('object');
+        });
+    });
+    describe('Metadata', function () {
+        it('should parse objectToMetadata type string', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const path = 'node1.foo';
+            const metadata = parser.objectToMetadata(object, [path]);
+            const key = Object.keys(metadata)[0];
+            expect(key).to.equal(path);
+            expect(metadata[key].type).to.equal('string');
+        });
+        it('should parse objectToMetadata type array', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const path = 'node1.arr';
+            const metadata = parser.objectToMetadata(object, [path]);
+            const key = Object.keys(metadata)[0];
+            expect(key).to.equal(path);
+            expect(metadata[key].size).to.equal(5);
+            expect(metadata[key].type).to.equal('array');
+        });
+        it('should parse objectToMetadata type number', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const path = 'node1.num';
+            const metadata = parser.objectToMetadata(object, [path]);
+            const key = Object.keys(metadata)[0];
+            expect(key).to.equal(path);
+            expect(metadata[key].type).to.equal('number');
+        });
+        it('should parse objectToMetadata all types', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const paths = ['node1.foo', 'node1.arr', 'node1.num', 'node1.arr.1'];
+            const metadata = parser.objectToMetadata(object, paths);
+            const keys = Object.keys(metadata);
+            expect(keys).to.deep.equal(paths);
+        });
+        it('should parse objectToMetadata type object', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const path = ['node1'];
+            const metadata = parser.objectToMetadata(object, path);
+            const key = Object.keys(metadata);
+            expect(key).to.deep.equal(path);
+            expect(metadata[key[0]].type).to.equal('object');
+        });
+        it('should not parse objectToMetadata', function () {
+            const object = {
+                node1: {
+                    foo: 'bar',
+                    arr: [1, 2, 3, 4, 5],
+                    num: 256
+                }
+            }
+            const path = ['node1.not', 'node1.exists', 'bla'];
+            const metadata = parser.objectToMetadata(object, path);
+            const keys = Object.keys(metadata);
+            expect(keys).to.be.empty;
+        });
+    });
+    describe('Batch', function () {
         it('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
@@ -242,381 +743,6 @@ describe('Main', function () {
             const result = parser.parse(options);
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(5);
-        });
-        it('should parse node result to another node', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            "@yellow",
-                            512
-                        ]
-                    }
-                ]
-            };
-
-            const node = pipeline.nodes[0];
-            const parentOutput = [{
-                node: 'yellow',
-                type: consts.relations.WAIT_NODE,
-                result: {
-                    "metadata": {
-                        "yellow": { type: "array", size: 5 }
-                    },
-                    "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                }
-            }];
-            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
-            const expectedInput = [`$$${key}`, 512];
-            expect(result.input).to.deep.equal(expectedInput);
-            expect(result.batch).to.equal(false);
-        });
-        it('should parse node result of waitNode result', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            "@yellow.data",
-                            512
-                        ]
-                    }
-                ]
-            };
-            const node = pipeline.nodes[0];
-            const parentOutput = [{
-                node: 'yellow',
-                type: consts.relations.WAIT_NODE,
-                result: {
-                    "metadata": {
-                        "yellow": { type: "array", size: 5 }
-                    },
-                    "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
-                        "path": 'link_to_data'
-                    }
-                }
-            }];
-            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
-            const expectedInput = [`$$${key}`, 512];
-            expect(result.input).to.deep.equal(expectedInput);
-            expect(result.batch).to.equal(false);
-            expect(result.storage).to.have.property(key);
-            expect(result.storage[key].storageInfo).to.deep.equal(parentOutput[0].result.storageInfo);
-            expect(result.storage[key].path).to.equal('data');
-        });
-        it('should parse node result of waitAny result', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            "*@yellow.data",
-                            512
-                        ]
-                    }
-                ]
-            };
-            const node = pipeline.nodes[0];
-            const parentOutput = [{
-                node: 'yellow',
-                type: consts.relations.WAIT_ANY,
-                result: {
-                    "metadata": {
-                        "yellow": { type: "array", size: 5 }
-                    },
-                    "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
-                        "path": 'link_to_data'
-                    }
-                }
-            }];
-            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput: parentOutput });
-            const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
-            const expectedInput = [`$$${key}`, 512];
-            expect(result.batch).to.equal(false);
-            expect(result.input).to.deep.equal(expectedInput);
-        });
-        it('should parse node result of waitBatch result', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            "#@yellow.data",
-                            512
-                        ]
-                    }
-                ]
-            };
-            const parentResult = [{
-                metadata: {
-                    yellow: { type: "array", size: 5 }
-                },
-                storageInfo: {
-                    Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                }
-            },
-            {
-                metadata: {
-                    yellow: { type: "array", size: 5 }
-                },
-                storageInfo: {
-                    Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                }
-            },
-            {
-                metadata: {
-                    yellow: { type: "array", size: 5 }
-                },
-                storageInfo: {
-                    Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                }
-            }];
-            const node = pipeline.nodes[0];
-            const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: parentResult }];
-            const options = Object.assign({}, { nodeInput: node.input }, { parentOutput });
-            const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
-            expect(result.batch).to.equal(true);
-            expect(result.input).to.have.lengthOf(parentResult.length);
-            expect(result.storage[key]).to.have.property('storageInfo');
-            expect(result.storage[key]).to.have.property('path');
-        });
-        it('should parse node result of waitAnyBatch result', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            true,
-                            "*#@yellow.data",
-                            512,
-                            "@flowInput.files.links"
-                        ]
-                    }
-                ],
-                "flowInput": {
-                    "metadata": {
-                        "flowInput.files.links": { type: "array", size: 5 }
-                    },
-                    "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                }
-            };
-
-            const node = pipeline.nodes[0];
-            const array =
-                [{
-                    metadata: {
-                        "yellow.data": { type: "array", size: 5 }
-                    },
-                    storageInfo: {
-                        Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                },
-                {
-                    metadata: {
-                        "yellow.data": { type: "array", size: 5 }
-                    },
-                    storageInfo: {
-                        Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                },
-                {
-                    metadata: {
-                        "yellow.data": { type: "array", size: 5 }
-                    },
-                    storageInfo: {
-                        Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                }]
-
-            array.forEach(a => {
-                const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: a }];
-                const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
-                const result = parser.parse(options);
-                const length = array[0].length;
-                const keys = Object.keys(result.storage);
-                const key = keys[0];
-                expect(result.batch).to.equal(true);
-                expect(result.input).to.have.lengthOf(5);
-                expect(result.input[0].input).to.have.lengthOf(node.input.length);
-                expect(result.storage).to.have.property(key);
-                expect(result.storage[key]).to.have.property('storageInfo');
-                expect(result.storage[key]).to.have.property('path');
-
-            })
-        });
-        it('should parse node result of waitNode/waitAny/waitAnyBatch result', function () {
-            const pipeline = {
-                "name": "resultBatch",
-                "nodes": [
-                    {
-                        "nodeName": "red",
-                        "algorithmName": "red-alg",
-                        "input": [
-                            "@yellow.data",
-                            "*@yellow.data",
-                            "*#@yellow.data",
-                            "@flowInput.files.links"
-                        ]
-                    }
-                ],
-                "flowInput": {
-                    "metadata": {
-                        "flowInput.files.links": { type: "array", size: 5 }
-                    },
-                    "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
-                    }
-                }
-            };
-
-            const node = pipeline.nodes[0];
-            const waitNode = {
-                metadata: {
-                    "flowInput.files.links": { type: "array", size: 5 }
-                },
-                storageInfo: { path: 'link_to_data1' }
-            };
-            const waitAny = {
-                metadata: {
-                    "flowInput.files.links": { type: "array", size: 5 }
-                },
-                storageInfo: { path: 'link_to_data1' }
-            };
-            const waitAnyBatch = [
-                {
-                    metadata: {
-                        "flowInput.files.links": { type: "array", size: 5 }
-                    }, storageInfo: { path: 'link_to_data1' }
-                },
-                {
-                    metadata: {
-                        "flowInput.files.links": { type: "array", size: 5 }
-                    }, storageInfo: { path: 'link_to_data1' }
-                },
-                {
-                    metadata: {
-                        "flowInput.files.links": { type: "array", size: 5 }
-                    }, storageInfo: { path: 'link_to_data1' }
-                }];
-
-            const parentOutput = [
-                { node: 'yellow', type: consts.relations.WAIT_NODE, result: waitNode },
-                { node: 'yellow', type: consts.relations.WAIT_ANY, result: waitAny },
-                { node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: waitAnyBatch }
-            ];
-            const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
-            const nodes = parser.extractNodesFromInput(node.input);
-            const result = parser.parse(options);
-            const keys = Object.keys(result.storage);
-            const key = keys[0];
-            expect(result.batch).to.equal(true);
-            expect(result.input).to.have.lengthOf(waitAnyBatch.length);
-            expect(result.input[0].input).to.have.lengthOf(node.input.length);
-
-            const key0 = result.input[0].input[0].substr(2);
-            const key1 = result.input[0].input[1].substr(2);
-            const key2 = result.input[0].input[2].substr(2);
-            const key3 = result.input[1].input[0].substr(2);
-            const key4 = result.input[1].input[1].substr(2);
-            const key5 = result.input[1].input[2].substr(2);
-            const key6 = result.input[2].input[0].substr(2);
-            const key7 = result.input[2].input[1].substr(2);
-            const key8 = result.input[2].input[2].substr(2);
-
-            expect(result.storage[key0].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key1].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
-            expect(result.storage[key3].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key4].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key5].storageInfo).to.deep.equal(waitAnyBatch[1].storageInfo);
-            expect(result.storage[key6].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key7].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key8].storageInfo).to.deep.equal(waitAnyBatch[2].storageInfo);
-
-            expect(result.storage).to.have.property(key);
-            expect(result.storage[key]).to.have.property('storageInfo');
-            expect(result.storage[key]).to.have.property('path');
-
-        });
-        it('should parse simple input', function () {
-            const pipeline = {
-                "name": "flow1",
-                "nodes": [
-                    {
-                        "nodeName": "white",
-                        "algorithmName": "black-alg",
-                        "input": [
-                            "test"
-                        ]
-                    }
-                ]
-            }
-            const node = pipeline.nodes[0];
-            const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: node.input });
-            const result = parser.parse(options);
-            expect(result.batch).to.equal(false);
-            expect(result.input).to.deep.equal(["test"]);
-        });
-        it('should parse empty input', function () {
-            const pipeline = {
-                "name": "flow1",
-                "nodes": [
-                    {
-                        "nodeName": "white",
-                        "algorithmName": "black-alg",
-                        "input": []
-                    }
-                ]
-            }
-            const node = pipeline.nodes[0];
-            const options = Object.assign({}, { nodeInput: node.input });
-            const result = parser.parse(options);
-            expect(result.batch).to.equal(false);
-            expect(result.input).to.deep.equal(node.input);
-        });
-        it('should throw type error on string', function () {
-            expect(() => {
-                parser.parse("string");
-            }).to.throw(TypeError, 'options');
-        });
-        it('should throw type error on null', function () {
-            expect(() => {
-                parser.parse(null);
-            }).to.throw(TypeError, 'options');
         });
     });
     describe('Checks', function () {
