@@ -700,6 +700,24 @@ describe('Main', function () {
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(5);
         });
+        it('should parse batch range input as raw', function () {
+            const pipeline = {
+                "nodes": [
+                    {
+                        "nodeName": "green",
+                        "algorithmName": "green-alg",
+                        "input": [
+                            "#[600...700]"
+                        ]
+                    }
+                ]
+            }
+            const firstNode = pipeline.nodes[0];
+            const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(100);
+        });
         it('should parse node result to batch', function () {
             const pipeline = {
                 "name": "resultBatch",
