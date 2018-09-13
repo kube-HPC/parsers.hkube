@@ -584,8 +584,7 @@ describe('Main', function () {
             const firstNode = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: firstNode.input });
             const result = parser.parse(options);
-            expect(result.batch).to.deep.equal(false);
-            expect(result.input).to.deep.equal(firstNode.input);
+            expect(result.batch).to.deep.equal(true);
         });
         it('should parse batch input as object', function () {
             const pipeline = {
