@@ -29,8 +29,7 @@ describe('Main', function () {
                         "yellow": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }];
@@ -64,8 +63,6 @@ describe('Main', function () {
                         "yellow": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
                         "path": 'link_to_data'
                     }
                 }
@@ -103,8 +100,6 @@ describe('Main', function () {
                         "yellow": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "yellow:yellow-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227",
                         "path": 'link_to_data'
                     }
                 }
@@ -135,8 +130,7 @@ describe('Main', function () {
                     yellow: { type: "array", size: 5 }
                 },
                 storageInfo: {
-                    Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                 }
             },
             {
@@ -144,8 +138,7 @@ describe('Main', function () {
                     yellow: { type: "array", size: 5 }
                 },
                 storageInfo: {
-                    Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                 }
             },
             {
@@ -153,8 +146,7 @@ describe('Main', function () {
                     yellow: { type: "array", size: 5 }
                 },
                 storageInfo: {
-                    Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                    Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                 }
             }];
             const node = pipeline.nodes[0];
@@ -187,8 +179,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             };
@@ -199,8 +190,7 @@ describe('Main', function () {
                         "yellow.data": { type: "array", size: 5 }
                     },
                     storageInfo: {
-                        Key: "yellow:yellow-alg:1bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 },
                 {
@@ -208,8 +198,7 @@ describe('Main', function () {
                         "yellow.data": { type: "array", size: 5 }
                     },
                     storageInfo: {
-                        Key: "yellow:yellow-alg:2bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 },
                 {
@@ -217,8 +206,7 @@ describe('Main', function () {
                         "yellow.data": { type: "array", size: 5 }
                     },
                     storageInfo: {
-                        Key: "yellow:yellow-alg:3bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        Bucket: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        path: "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }]
 
@@ -257,8 +245,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             };
@@ -600,8 +587,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }
@@ -629,8 +615,7 @@ describe('Main', function () {
                         "flowInput.files": { type: "object" }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }
@@ -659,8 +644,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }
@@ -692,8 +676,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }
@@ -723,8 +706,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }
@@ -789,8 +771,7 @@ describe('Main', function () {
                         "flowInput.files.links": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "flowInput:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "flowInput-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "flowInput-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             };
@@ -803,8 +784,7 @@ describe('Main', function () {
                         "green": { type: "array", size: 5 }
                     },
                     "storageInfo": {
-                        "Key": "green:green-alg:bde23282-4a20-4a13-9d5c-a1e9cd4a696a",
-                        "Bucket": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
                     }
                 }
             }];
