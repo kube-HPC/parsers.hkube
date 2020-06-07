@@ -1,6 +1,6 @@
 {
   "name": "@hkube/parsers",
-  "version": "1.0.22",
+  "version": "2.0.0",
   "description": "pipeline and nodes input parser",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "clone": "^2.1.2",
-    "flat": "^4.1.0",
+    "flat": "^5.0.0",
     "object-path": "^0.11.4",
     "uuid": "^3.3.2"
   },
