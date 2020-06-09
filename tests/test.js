@@ -119,7 +119,7 @@ describe('Main', function () {
                         "nodeName": "red",
                         "algorithmName": "red-alg",
                         "input": [
-                            "#@yellow.data",
+                            "#@yellow.data.0",
                             512
                         ]
                     }
@@ -153,7 +153,6 @@ describe('Main', function () {
             const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: parentResult }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput });
             const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(parentResult.length);
             expect(result.storage[key]).to.have.property('storageInfo');
@@ -546,7 +545,7 @@ describe('Main', function () {
         });
     });
     describe('Batch', function () {
-        it.only('should parse batch input as string', function () {
+        it('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
                     {
@@ -565,7 +564,7 @@ describe('Main', function () {
                         ]
                     },
                 ],
-                "flowInput": {
+                "flowInputOrig": {
                     "x": [1, 2, 3, 4, 5],
                     "y": false,
                     "files": {
@@ -788,26 +787,108 @@ describe('Main', function () {
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(5);
         });
-        it('should parse batch input as matrix', function () {
+        it('should parse batch input as indexed', function () {
             const pipeline = {
                 nodes: [
                     {
                         nodeName: "green",
                         algorithmName: "green-alg",
                         input: [
-                            "#[1...10]",
-                            "data1",
-                            "data2",
-                            "#[100...110]",
+                            { data1: "#[0...10]" },
+                            { val1: "data1" },
+                            { val2: "data2" },
+                            { data2: "#[100...110]" },
                         ]
                     }
                 ]
             }
             const node = pipeline.nodes[0];
-            const options = { nodeInput: node.input, batchOperation: 'cc' };
+            const options = { nodeInput: node.input, batchOperation: 'indexed' };
             const result = parser.parse(options);
             expect(result.batch).to.equal(true);
-            expect(result.input).to.have.lengthOf(5);
+            expect(result.input).to.have.lengthOf(10);
+            expect(result.input[0].input[0].data1).to.equal(0);
+            expect(result.input[0].input[1].val1).to.equal("data1");
+            expect(result.input[0].input[2].val2).to.equal("data2");
+            expect(result.input[0].input[3].data2).to.equal(100);
+            expect(result.input[9].input[0].data1).to.equal(9);
+            expect(result.input[9].input[1].val1).to.equal("data1");
+            expect(result.input[9].input[2].val2).to.equal("data2");
+            expect(result.input[9].input[3].data2).to.equal(109);
+        });
+        it('should parse batch input as cartesian', function () {
+            const pipeline = {
+                nodes: [
+                    {
+                        nodeName: "green",
+                        algorithmName: "green-alg",
+                        input: [
+                            { data1: "#[0...10]" },
+                            { val1: "data1" },
+                            { val2: "data2" },
+                            { data2: "#[100...110]" }
+                        ]
+                    }
+                ]
+            }
+            const node = pipeline.nodes[0];
+            const options = { nodeInput: node.input, batchOperation: 'cartesian' };
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(100);
+            expect(result.input[0].input[0].data1).to.equal(0);
+            expect(result.input[0].input[1].val1).to.equal("data1");
+            expect(result.input[0].input[2].val2).to.equal("data2");
+            expect(result.input[0].input[3].data2).to.equal(100);
+            expect(result.input[99].input[0].data1).to.equal(9);
+            expect(result.input[99].input[1].val1).to.equal("data1");
+            expect(result.input[99].input[2].val2).to.equal("data2");
+            expect(result.input[99].input[3].data2).to.equal(109);
+        });
+        it('should parse batch input as cartesian with flowInput', function () {
+            const pipeline = {
+                nodes: [
+                    {
+                        nodeName: "green",
+                        algorithmName: "green-alg",
+                        input: [
+                            "#@flowInput.files.links",
+                            { data: { prop: "@flowInput.x" } },
+                            "@flowInput.x",
+                            "@flowInput.y",
+                            "#@flowInput.files.links",
+                            2,
+                            false,
+                            ["@flowInput"],
+                            { a: { b: "@flowInput.z" } }
+                        ]
+                    },
+                ],
+                "flowInputOrig": {
+                    "x": [1, 2, 3, 4, 5],
+                    "y": false,
+                    "files": {
+                        "links": [1, 2, 3, 4, 5]
+                    }
+                },
+                "flowInput": {
+                    "metadata": {
+                        "flowInput": { type: "object" },
+                        "flowInput.x": { type: "array", size: 5 },
+                        "flowInput.y": { type: "bool" },
+                        "flowInput.files": { type: "object" },
+                        "flowInput.files.links": { type: "array", size: 5 }
+                    },
+                    "storageInfo": {
+                        "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                    }
+                }
+            }
+            const firstNode = pipeline.nodes[0];
+            const options = { flowInput: pipeline.flowInput, nodeInput: firstNode.input, batchOperation: 'cartesian' };
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(25);
         });
     });
     describe('Checks', function () {
