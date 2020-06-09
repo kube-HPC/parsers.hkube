@@ -119,7 +119,7 @@ describe('Main', function () {
                         "nodeName": "red",
                         "algorithmName": "red-alg",
                         "input": [
-                            "#@yellow.data.0",
+                            "#@yellow.data",
                             512
                         ]
                     }
@@ -153,10 +153,12 @@ describe('Main', function () {
             const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_BATCH, result: parentResult }];
             const options = Object.assign({}, { nodeInput: node.input }, { parentOutput });
             const result = parser.parse(options);
+            const key = Object.keys(result.input[0].storage)[0];
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(parentResult.length);
-            expect(result.storage[key]).to.have.property('storageInfo');
-            expect(result.storage[key]).to.have.property('path');
+            expect(result.input[0].storage[key]).to.have.property('storageInfo');
+            expect(result.input[0].storage[key]).to.have.property('path');
+            expect(result.input[0].storage[key]).to.have.property('metadata');
         });
         it('should parse node result of waitAnyBatch result', function () {
             const pipeline = {
@@ -285,38 +287,20 @@ describe('Main', function () {
                 { node: 'yellow', type: consts.relations.WAIT_ANY_BATCH, result: waitAnyBatch }
             ];
             const options = Object.assign({}, { nodeInput: node.input }, { flowInput: pipeline.flowInput }, { parentOutput });
-            const nodes = parser.extractNodesFromInput(node.input);
             const result = parser.parse(options);
-            const keys = Object.keys(result.storage);
-            const key = keys[0];
+            const key0 = result.input[0].input[0].substr(2);
+            const key1 = result.input[0].input[1].substr(2);
+            const key2 = result.input[0].input[2].substr(2);
+            const key3 = result.input[0].input[3].substr(2);
+
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(waitAnyBatch.length);
             expect(result.input[0].input).to.have.lengthOf(node.input.length);
 
-            const key0 = result.input[0].input[0].substr(2);
-            const key1 = result.input[0].input[1].substr(2);
-            const key2 = result.input[0].input[2].substr(2);
-            const key3 = result.input[1].input[0].substr(2);
-            const key4 = result.input[1].input[1].substr(2);
-            const key5 = result.input[1].input[2].substr(2);
-            const key6 = result.input[2].input[0].substr(2);
-            const key7 = result.input[2].input[1].substr(2);
-            const key8 = result.input[2].input[2].substr(2);
-
-            expect(result.storage[key0].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key1].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
-            expect(result.storage[key3].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key4].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key5].storageInfo).to.deep.equal(waitAnyBatch[1].storageInfo);
-            expect(result.storage[key6].storageInfo).to.deep.equal(waitNode.storageInfo);
-            expect(result.storage[key7].storageInfo).to.deep.equal(waitAny.storageInfo);
-            expect(result.storage[key8].storageInfo).to.deep.equal(waitAnyBatch[2].storageInfo);
-
-            expect(result.storage).to.have.property(key);
-            expect(result.storage[key]).to.have.property('storageInfo');
-            expect(result.storage[key]).to.have.property('path');
-
+            expect(result.input[0].storage[key0].storageInfo).to.deep.equal(waitNode.storageInfo);
+            expect(result.input[0].storage[key1].storageInfo).to.deep.equal(waitAny.storageInfo);
+            expect(result.input[0].storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
+            expect(result.input[0].storage[key3].storageInfo).to.deep.equal(pipeline.flowInput.storageInfo);
         });
         it('should parse simple input', function () {
             const pipeline = {
@@ -797,7 +781,10 @@ describe('Main', function () {
                             { data1: "#[0...10]" },
                             { val1: "data1" },
                             { val2: "data2" },
-                            { data2: "#[100...110]" },
+                            { data2: "#[10...20]" },
+                            "data1",
+                            "data2",
+                            { data3: "#[20...30]" }
                         ]
                     }
                 ]
@@ -808,13 +795,21 @@ describe('Main', function () {
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(10);
             expect(result.input[0].input[0].data1).to.equal(0);
+            expect(result.input[0].input[3].data2).to.equal(10);
+            expect(result.input[0].input[6].data3).to.equal(20);
+            expect(result.input[9].input[0].data1).to.equal(9);
+            expect(result.input[9].input[3].data2).to.equal(19);
+            expect(result.input[9].input[6].data3).to.equal(29);
+
             expect(result.input[0].input[1].val1).to.equal("data1");
             expect(result.input[0].input[2].val2).to.equal("data2");
-            expect(result.input[0].input[3].data2).to.equal(100);
-            expect(result.input[9].input[0].data1).to.equal(9);
+            expect(result.input[0].input[4]).to.equal("data1");
+            expect(result.input[0].input[5]).to.equal("data2");
             expect(result.input[9].input[1].val1).to.equal("data1");
             expect(result.input[9].input[2].val2).to.equal("data2");
-            expect(result.input[9].input[3].data2).to.equal(109);
+            expect(result.input[9].input[4]).to.equal("data1");
+            expect(result.input[9].input[5]).to.equal("data2");
+
         });
         it('should parse batch input as cartesian', function () {
             const pipeline = {
