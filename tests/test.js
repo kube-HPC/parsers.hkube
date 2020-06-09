@@ -546,7 +546,7 @@ describe('Main', function () {
         });
     });
     describe('Batch', function () {
-        it('should parse batch input as string', function () {
+        it.only('should parse batch input as string', function () {
             const pipeline = {
                 "nodes": [
                     {
@@ -565,17 +565,11 @@ describe('Main', function () {
                         ]
                     },
                 ],
-                "fromClient": {
-                    "x": 3,
+                "flowInput": {
+                    "x": [1, 2, 3, 4, 5],
                     "y": false,
                     "files": {
-                        "links": [
-                            "links-1",
-                            "links-2",
-                            "links-3",
-                            "links-4",
-                            "links-5"
-                        ]
+                        "links": [1, 2, 3, 4, 5]
                     }
                 },
                 "flowInput": {
@@ -790,6 +784,27 @@ describe('Main', function () {
             }];
             const node = pipeline.nodes[0];
             const options = Object.assign({}, { flowInput: pipeline.flowInput }, { nodeInput: node.input }, { parentOutput: parentOutput });
+            const result = parser.parse(options);
+            expect(result.batch).to.equal(true);
+            expect(result.input).to.have.lengthOf(5);
+        });
+        it('should parse batch input as matrix', function () {
+            const pipeline = {
+                nodes: [
+                    {
+                        nodeName: "green",
+                        algorithmName: "green-alg",
+                        input: [
+                            "#[1...10]",
+                            "data1",
+                            "data2",
+                            "#[100...110]",
+                        ]
+                    }
+                ]
+            }
+            const node = pipeline.nodes[0];
+            const options = { nodeInput: node.input, batchOperation: 'cc' };
             const result = parser.parse(options);
             expect(result.batch).to.equal(true);
             expect(result.input).to.have.lengthOf(5);
