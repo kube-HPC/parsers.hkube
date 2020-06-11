@@ -868,7 +868,7 @@ describe('Main', function () {
                         ]
                     },
                 ],
-                "flowInputOrig": {
+                "flowInput": {
                     "x": [1, 2, 3, 4, 5],
                     "y": false,
                     "files": {
@@ -920,7 +920,7 @@ describe('Main', function () {
                 }
             }
             const firstNode = pipeline.nodes[0];
-            const options = Object.assign({}, { flowInputMetadata: pipeline.flowInputMetadata }, { nodeInput: firstNode.input });
+            const options = Object.assign({}, { flowInputMetadata: pipeline.flowInput }, { nodeInput: firstNode.input });
             expect(() => {
                 parser.checkFlowInput(options);
             }).to.throw(`unable to find flowInput.not_such_object`);
@@ -977,7 +977,7 @@ describe('Main', function () {
                 }
             }
             const firstNode = pipeline.nodes[0];
-            const options = Object.assign({}, { flowInputMetadata: pipeline.flowInputMetadata }, { nodeInput: null });
+            const options = Object.assign({}, { flowInputMetadata: pipeline.flowInput }, { nodeInput: null });
             parser.checkFlowInput(options);
             expect(options.nodeInput).to.be.null;
         });
