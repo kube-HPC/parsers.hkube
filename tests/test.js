@@ -398,6 +398,14 @@ describe('Main', function () {
             expect(key1).to.eql(key2);
             expect(result.batch).to.equal(false);
         });
+        it('should replaceNodeInput', function () {
+            const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign');
+            expect(result).to.eql(['@sign-yellow.data', '#@sign-green.batch']);
+        });
+        it('should replaceNodeInput', function () {
+            const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign', prefix = false);
+            expect(result).to.eql(['@yellow.data-sign', '#@green.batch-sign']);
+        });
     });
     describe('Metadata', function () {
         it('should parse objectToMetadata with no path', function () {
