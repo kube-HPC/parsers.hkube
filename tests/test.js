@@ -406,6 +406,10 @@ describe('Main', function () {
             const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign', prefix = false);
             expect(result).to.eql(['@yellow.data-sign', '#@green.batch-sign']);
         });
+        it('should findNodeRelation', function () {
+            const result = parser.findNodeRelation([{ data: '*@yellow.data' }, { prop: '#@green.batch' }], consts.relations.WAIT_ANY);
+            expect(result.type).to.eql(consts.relations.WAIT_ANY);
+        });
     });
     describe('Metadata', function () {
         it('should parse objectToMetadata with no path', function () {
