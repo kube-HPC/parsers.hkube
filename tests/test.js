@@ -296,7 +296,7 @@ describe('Main', function () {
             };
 
             const node = pipeline.nodes[0];
-            const options = { nodeInput: node.input, parseNodesInput: false };
+            const options = { nodeInput: node.input, ignoreParentResult: true };
             const result = parser.parse(options);
             const key = Object.keys(result.storage)[0];
             const expectedInput = [`$$${key}`, 512];
