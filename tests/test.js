@@ -280,6 +280,30 @@ describe('Main', function () {
             expect(result.input[0].storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
             expect(result.input[0].storage[key3].storageInfo).to.deep.equal(pipeline.flowInputMetadata.storageInfo);
         });
+        it('should parse node without parent output', function () {
+            const pipeline = {
+                "name": "resultBatch",
+                "nodes": [
+                    {
+                        "nodeName": "red",
+                        "algorithmName": "red-alg",
+                        "input": [
+                            "@yellow",
+                            512
+                        ]
+                    }
+                ]
+            };
+
+            const node = pipeline.nodes[0];
+            const options = { nodeInput: node.input, parseNodesInput: false };
+            const result = parser.parse(options);
+            const key = Object.keys(result.storage)[0];
+            const expectedInput = [`$$${key}`, 512];
+            expect(result.input).to.deep.equal(expectedInput);
+            expect(result.batch).to.equal(false);
+            expect(result.storage[key]).to.eql({ empty: true });
+        });
         it('should parse simple input', function () {
             const pipeline = {
                 "name": "flow1",
