@@ -298,11 +298,8 @@ describe('Main', function () {
             const node = pipeline.nodes[0];
             const options = { nodeInput: node.input, ignoreParentResult: true };
             const result = parser.parse(options);
-            const key = Object.keys(result.storage)[0];
-            const expectedInput = [`$$${key}`, 512];
-            expect(result.input).to.deep.equal(expectedInput);
+            expect(result.input).to.deep.equal(node.input);
             expect(result.batch).to.equal(false);
-            expect(result.storage[key]).to.eql({ empty: true });
         });
         it('should parse simple input', function () {
             const pipeline = {
