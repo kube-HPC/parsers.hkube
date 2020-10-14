@@ -132,6 +132,26 @@ describe('DataSource', function() {
             }
         })
     });
+    it('should handle both dataSource and flowInput', () => {
+        const pipeline = {
+            nodes: [
+                {
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: [
+                        "@dataSource.images/file.jpg",
+                        "@flowInput.x"
+                    ]
+                },
+            ],
+            flowInput: {
+                x: 3,
+            }
+        }
+        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix: 'my-prefix' });
+        expect(results["@dataSource.images/file.jpg"]).to.exist;
+        expect(results["@flowInput.x"]).not.to.exist;
+    });
 
 
     it.skip('should parse the dataSourceMetadata object to storage uuid', () => {
