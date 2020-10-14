@@ -1,178 +1,158 @@
 const { expect } = require('chai');
 const { parser } = require('../index');
+const dataSourceParser = require('./../lib/dataSource-parser');
 
-
-describe.skip('DataSource', function() {
-    it.skip('should throw when check Flow Input', function() {
+describe('DataSource', function() {
+    it('should extract DataSource metadata from the pipeline as string', function() {
         const pipeline = {
             "nodes": [
                 {
                     "nodeName": "green",
                     "algorithmName": "green-alg",
                     "input": [
-                        { data: "@datasource:images/file-1.jpg" }, //--> $$uuid
-                        { prop: { d: "@datasource:videos/file-2.jpg" } }
+                        "@dataSource.images/file.jpg",
                     ]
                 },
             ],
-        };
-        const tmp = {
-            "datasourcesMetadata": [
-                { path: '0.data', datasource: 'name', pattern: 'name.jpg' }
-            ]
-        };
-        const output = {
-            "storage": {
-                "uuid": {
-                    storageInfo: { path: 'hkube-datasources/images/file-1.jpg' }
-                }
-            }
         }
-
-        const ds = parser.parse({ prefix: 'hkube-datasources', pipeline });
-        // 1. create ds metadata
-        // 2. create storage $$ from metadata
-
+        const results = dataSourceParser.extractMetaData(pipeline);
+        const [firstNode] = results;
+        const [firstDataSource] = firstNode;
+        expect(firstDataSource).to.deep.equal({
+            metadata: { dataSourceName: 'images', pattern: 'file.jpg', path: '0' },
+            storageInfo: { path: 'hkube-datasources/images/file.jpg' }
+        });
     });
-    it('should not throw check Flow Input when is valid', function() {
+
+    it('should extract DataSource metadata from the pipeline as object', function() {
         const pipeline = {
             "nodes": [
                 {
                     "nodeName": "green",
                     "algorithmName": "green-alg",
                     "input": [
-                        "#@flowInput.files.links"
+                        { prop: { d: "@dataSource.videos/file-2.jpg" } },
                     ]
                 },
             ],
-            "flowInput": {
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
-            }
         }
-        const firstNode = pipeline.nodes[0];
-        const options = { flowInput: pipeline.flowInput, nodeInput: firstNode.input };
-        parser.checkFlowInput(options);
-        expect(options.nodeInput).to.deep.equal(firstNode.input);
+        const results = dataSourceParser.extractMetaData(pipeline);
+        const [firstNode] = results;
+        const [firstDataSource] = firstNode;
+        expect(firstDataSource).to.deep.equal({
+            metadata: {
+                dataSourceName: "videos",
+                pattern: "file-2.jpg",
+                path: "0.prop.d"
+            },
+            storageInfo: {
+                path: "hkube-datasources/videos/file-2.jpg"
+            }
+        })
     });
-    it('should not throw check Flow Input node input is null', function() {
+
+
+    it('should extract DataSource metadata from the pipeline as array', function() {
         const pipeline = {
             "nodes": [
                 {
                     "nodeName": "green",
                     "algorithmName": "green-alg",
                     "input": [
-                        "#@flowInput.files.links"
+                        { data: [["@dataSource.videos/file-3.jpg"]] }
                     ]
                 },
             ],
-            "flowInput": {
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
-            }
         }
-        const firstNode = pipeline.nodes[0];
-        const options = Object.assign({}, { flowInputMetadata: pipeline.flowInput }, { nodeInput: null });
-        parser.checkFlowInput(options);
-        expect(options.nodeInput).to.be.null;
+        const results = dataSourceParser.extractMetaData(pipeline);
+        const [firstNode] = results;
+        const [firstDataSource] = firstNode;
+        expect(firstDataSource).to.deep.equal({
+            metadata: {
+                dataSourceName: "videos",
+                pattern: "file-3.jpg",
+                path: "0.data.0.0"
+            },
+            storageInfo: {
+                path: "hkube-datasources/videos/file-3.jpg"
+            }
+        });
     });
-    it('should check FlowInput as string', function() {
+
+    it('should extract DataSource metadata for more than one inputs', function() {
         const pipeline = {
             "nodes": [
                 {
                     "nodeName": "green",
                     "algorithmName": "green-alg",
-                    "input": ["@flowInput.files.links"]
-                },
-            ],
-            "flowInput": {
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
-            }
-        }
-        const nodeInput = pipeline.nodes[0].input[0];
-        const options = { flowInput: pipeline.flowInput, nodeInput };
-        const result = parser.checkFlowInput(options);
-
-    });
-    it('should check FlowInput as object', function() {
-        const pipeline = {
-            "nodes": [
-                {
-                    "nodeName": "green",
-                    "algorithmName": "green-alg",
-                    "input": [{
-                        links: [
-                            {
-                                data: { data: "@flowInput.files.links" }
-                            }
-                        ]
-                    }
+                    "input": [
+                        "@dataSource.images/file.jpg",
+                        { prop: { d: "@dataSource.videos/file-2.jpg" } }
                     ]
                 },
             ],
-            "flowInput": {
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
-            }
         }
-        const nodeInput = pipeline.nodes[0].input[0];
-        const options = { flowInput: pipeline.flowInput, nodeInput };
-        const result = parser.checkFlowInput(options);
-
-    });
-    it('should check FlowInput as array', function() {
-        const pipeline = {
-            "nodes": [
-                {
-                    "nodeName": "green",
-                    "algorithmName": "green-alg",
-                    "input": [{ data: [["@flowInput.files.links"]] }]
-                },
-            ],
-            "flowInput": {
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
+        const results = dataSourceParser.extractMetaData(pipeline);
+        const [firstNode] = results;
+        const [stringDataSource, objectDataSource] = firstNode;
+        expect(stringDataSource).to.deep.equal({
+            metadata: {
+                dataSourceName: "images",
+                pattern: "file.jpg",
+                path: "0"
+            },
+            storageInfo: {
+                path: "hkube-datasources/images/file.jpg"
             }
-        }
-        const nodeInput = pipeline.nodes[0].input[0];
-        const options = { flowInput: pipeline.flowInput, nodeInput };
-        const result = parser.checkFlowInput(options);
-
+        });
+        expect(objectDataSource).to.deep.equal({
+            metadata: {
+                dataSourceName: "videos",
+                pattern: "file-2.jpg",
+                path: "1.prop.d"
+            },
+            storageInfo: {
+                path: "hkube-datasources/videos/file-2.jpg"
+            }
+        })
     });
+
+
+    it.skip('should parse the dataSourceMetadata object to storage uuid', () => {
+
+        // it('should throw when check Flow Input', function() {
+        //     const pipeline = {
+        //         "nodes": [
+        //             {
+        //                 "nodeName": "green",
+        //                 "algorithmName": "green-alg",
+        //                 "input": [
+        //                     { data: "@datasource.images/file-1.jpg" }, //--> $$uuid
+        //                     { prop: { d: "@datasource.videos/file-2.jpg" } }
+        //                 ]
+        //             },
+        //         ],
+        //     };
+        //     const tmp = {
+        //         "datasourcesMetadata": [{
+        //                   metadata: { path: '0.data', datasource: 'name', pattern: 'name.jpg' }
+        //                   storageInfo: { path: 'hkube-datasources/images/file-1.jpg' }
+        //           }]
+        //     };
+
+        //     const output = {
+        //         "storage": {
+        //             "uuid": {
+        //                 storageInfo: { path: 'hkube-datasources/images/file-1.jpg' }
+        //             }
+        //         }
+        //     }
+
+        //     const ds = parser.parse({ prefix: 'hkube-datasources', pipeline });
+        //     // 1. create ds metadata
+        //     // 2. create storage $$ from metadata
+
+        // });
+    });
+
 });
