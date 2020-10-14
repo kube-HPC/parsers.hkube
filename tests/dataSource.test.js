@@ -4,48 +4,46 @@ const { parser } = require('../index');
 describe('DataSource', function() {
     it('should extract DataSource metadata from the pipeline as string', function() {
         const pipeline = {
-            "nodes": [
+            nodes: [
                 {
-                    "nodeName": "green",
-                    "algorithmName": "green-alg",
-                    "input": [
-                        "@dataSource.images/file.jpg",
-                    ]
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: ["@dataSource.images/file.jpg"]
                 },
             ],
-        }
-        const results = parser.extractDataSourceMetaData(pipeline);
-        const [firstNode] = results;
-        const [firstDataSource] = firstNode;
-        expect(firstDataSource).to.deep.equal({
+        };
+
+        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix: 'my-prefix' });
+
+        expect(results["@dataSource.images/file.jpg"]).to.deep.equal({
             metadata: { dataSourceName: 'images', pattern: 'file.jpg', path: '0' },
-            storageInfo: { path: 'hkube-datasources/images/file.jpg' }
+            storageInfo: { path: 'my-prefix/images/file.jpg' }
         });
     });
 
     it('should extract DataSource metadata from the pipeline as object', function() {
         const pipeline = {
-            "nodes": [
+            nodes: [
                 {
-                    "nodeName": "green",
-                    "algorithmName": "green-alg",
-                    "input": [
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: [
                         { prop: { d: "@dataSource.videos/file-2.jpg" } },
                     ]
                 },
             ],
-        }
-        const results = parser.extractDataSourceMetaData(pipeline);
-        const [firstNode] = results;
-        const [firstDataSource] = firstNode;
-        expect(firstDataSource).to.deep.equal({
+        };
+
+        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix: 'my-prefix' });
+
+        expect(results["@dataSource.videos/file-2.jpg"]).to.deep.equal({
             metadata: {
                 dataSourceName: "videos",
                 pattern: "file-2.jpg",
                 path: "0.prop.d"
             },
             storageInfo: {
-                path: "hkube-datasources/videos/file-2.jpg"
+                path: "my-prefix/videos/file-2.jpg"
             }
         })
     });
@@ -62,56 +60,75 @@ describe('DataSource', function() {
                     ]
                 },
             ],
-        }
-        const results = parser.extractDataSourceMetaData(pipeline);
-        const [firstNode] = results;
-        const [firstDataSource] = firstNode;
-        expect(firstDataSource).to.deep.equal({
+        };
+
+        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix: 'my-prefix' });
+
+        expect(results["@dataSource.videos/file-3.jpg"]).to.deep.equal({
             metadata: {
                 dataSourceName: "videos",
                 pattern: "file-3.jpg",
                 path: "0.data.0.0"
             },
             storageInfo: {
-                path: "hkube-datasources/videos/file-3.jpg"
+                path: "my-prefix/videos/file-3.jpg"
             }
         });
     });
 
-    it('should extract DataSource metadata for more than one inputs', function() {
+    it('should extract metadata for more than one inputs and avoid duplicates', function() {
         const pipeline = {
-            "nodes": [
+            nodes: [
                 {
-                    "nodeName": "green",
-                    "algorithmName": "green-alg",
-                    "input": [
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: [
                         "@dataSource.images/file.jpg",
                         { prop: { d: "@dataSource.videos/file-2.jpg" } }
                     ]
                 },
+                {
+                    nodeName: "blue",
+                    algorithmName: "blue-alg",
+                    input: [
+                        "@dataSource.images/file.jpg",
+                        "@dataSource.images/file-3.jpg",
+                    ]
+                },
             ],
-        }
-        const results = parser.extractDataSourceMetaData(pipeline);
-        const [firstNode] = results;
-        const [stringDataSource, objectDataSource] = firstNode;
-        expect(stringDataSource).to.deep.equal({
+        };
+
+        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix: 'my-prefix' });
+
+        expect(Object.values(results)).to.have.length(3);
+        expect(results['@dataSource.images/file.jpg']).to.deep.equal({
             metadata: {
                 dataSourceName: "images",
                 pattern: "file.jpg",
                 path: "0"
             },
             storageInfo: {
-                path: "hkube-datasources/images/file.jpg"
+                path: "my-prefix/images/file.jpg"
             }
         });
-        expect(objectDataSource).to.deep.equal({
+        expect(results["@dataSource.videos/file-2.jpg"]).to.deep.equal({
             metadata: {
                 dataSourceName: "videos",
                 pattern: "file-2.jpg",
                 path: "1.prop.d"
             },
             storageInfo: {
-                path: "hkube-datasources/videos/file-2.jpg"
+                path: "my-prefix/videos/file-2.jpg"
+            }
+        })
+        expect(results['@dataSource.images/file-3.jpg']).to.deep.equal({
+            metadata: {
+                dataSourceName: "images",
+                pattern: "file-3.jpg",
+                path: "1"
+            },
+            storageInfo: {
+                path: "my-prefix/images/file-3.jpg"
             }
         })
     });
