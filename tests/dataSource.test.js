@@ -1,6 +1,5 @@
 const { expect } = require('chai');
 const { parser } = require('../index');
-const dataSourceParser = require('./../lib/dataSource-parser');
 
 describe('DataSource', function() {
     it('should extract DataSource metadata from the pipeline as string', function() {
@@ -15,7 +14,7 @@ describe('DataSource', function() {
                 },
             ],
         }
-        const results = dataSourceParser.extractMetaData(pipeline);
+        const results = parser.extractDataSourceMetaData(pipeline);
         const [firstNode] = results;
         const [firstDataSource] = firstNode;
         expect(firstDataSource).to.deep.equal({
@@ -36,7 +35,7 @@ describe('DataSource', function() {
                 },
             ],
         }
-        const results = dataSourceParser.extractMetaData(pipeline);
+        const results = parser.extractDataSourceMetaData(pipeline);
         const [firstNode] = results;
         const [firstDataSource] = firstNode;
         expect(firstDataSource).to.deep.equal({
@@ -64,7 +63,7 @@ describe('DataSource', function() {
                 },
             ],
         }
-        const results = dataSourceParser.extractMetaData(pipeline);
+        const results = parser.extractDataSourceMetaData(pipeline);
         const [firstNode] = results;
         const [firstDataSource] = firstNode;
         expect(firstDataSource).to.deep.equal({
@@ -92,7 +91,7 @@ describe('DataSource', function() {
                 },
             ],
         }
-        const results = dataSourceParser.extractMetaData(pipeline);
+        const results = parser.extractDataSourceMetaData(pipeline);
         const [firstNode] = results;
         const [stringDataSource, objectDataSource] = firstNode;
         expect(stringDataSource).to.deep.equal({

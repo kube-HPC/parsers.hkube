@@ -18,3 +18,5 @@ export type DataSourceMetaData = {
   metadata: Metadata;
   storageInfo: StorageInfo;
 };
+
+export { dataSourceParser as default } from "./dataSource-parser";
