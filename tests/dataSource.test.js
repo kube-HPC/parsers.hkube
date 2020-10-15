@@ -158,6 +158,33 @@ describe('DataSource', function () {
         expect(results["dataSource.images/file.jpg"]).to.exist;
         expect(results["flowInput.x"]).not.to.exist;
     });
+    it('should extract DataSource metadata from the pipeline as string', function () {
+        const pipeline = {
+            nodes: [
+                {
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: ["@dataSource.videos/file.jpg", "@dataSource.images/file.jpg"]
+                },
+            ],
+        };
+        const node = pipeline.nodes[0];
+        const dataSourceMetadata = {
+            'dataSource.videos/file.jpg': {
+                storageInfo: { path: `${storagePrefix}/images/file.jpg` }
+            },
+            'dataSource.images/file.jpg': {
+                storageInfo: { path: `${storagePrefix}/videos/file.jpg` }
+            }
+        }
+        const options = { nodeInput: node.input, dataSourceMetadata };
+        const result = parser.parse(options);
+        const keys = Object.keys(result.storage);
+        const expectedInput = [`$$${keys[0]}`, `$$${keys[1]}`];
+        expect(result.input).to.eql(expectedInput);
+        expect(result.storage[keys[0]]).to.eql({ path: undefined, storageInfo: { path: `${storagePrefix}/images/file.jpg` } });
+        expect(result.storage[keys[1]]).to.eql({ path: undefined, storageInfo: { path: `${storagePrefix}/videos/file.jpg` } });
+    });
     it.skip('should parse the dataSourceMetadata object to storage uuid', () => {
 
         // it('should throw when check Flow Input', function() {

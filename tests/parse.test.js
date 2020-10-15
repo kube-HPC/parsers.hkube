@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const { parser, consts } = require('../index');
 
-describe('Parse', function() {
-    it('should parse node result to another node', function() {
+describe('Parse', function () {
+    it('should parse node result to another node', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -37,7 +37,7 @@ describe('Parse', function() {
         expect(result.input).to.deep.equal(expectedInput);
         expect(result.batch).to.equal(false);
     });
-    it('should parse node result of waitNode result', function() {
+    it('should parse node result of waitNode result', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -74,7 +74,7 @@ describe('Parse', function() {
         expect(result.storage[key].storageInfo).to.deep.equal(parentOutput[0].result.storageInfo);
         expect(result.storage[key].path).to.equal('data');
     });
-    it('should parse node result of waitAny result', function() {
+    it('should parse node result of waitAny result', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -108,7 +108,7 @@ describe('Parse', function() {
         expect(result.batch).to.equal(false);
         expect(result.input).to.deep.equal(expectedInput);
     });
-    it('should parse node result of waitBatch result', function() {
+    it('should parse node result of waitBatch result', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -157,7 +157,7 @@ describe('Parse', function() {
         expect(result.input[0].storage[key]).to.have.property('path');
         expect(result.input[0].storage[key]).to.have.property('metadata');
     });
-    it('should parse node result of waitAnyBatch result', function() {
+    it('should parse node result of waitAnyBatch result', function () {
         const pipeline = {
             name: "resultBatch",
             nodes: [
@@ -202,7 +202,7 @@ describe('Parse', function() {
         expect(result.input).to.have.lengthOf(size);
         expect(result.input[0].input).to.have.lengthOf(node.input.length);
     });
-    it('should parse node result of waitNode/waitAny/waitAnyBatch result', function() {
+    it('should parse node result of waitNode/waitAny/waitAnyBatch result', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -278,7 +278,7 @@ describe('Parse', function() {
         expect(result.input[0].storage[key2].storageInfo).to.deep.equal(waitAnyBatch[0].storageInfo);
         expect(result.input[0].storage[key3].storageInfo).to.deep.equal(pipeline.flowInputMetadata.storageInfo);
     });
-    it('should parse node without parent output', function() {
+    it('should parse node without parent output', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -299,7 +299,7 @@ describe('Parse', function() {
         expect(result.input).to.deep.equal(node.input);
         expect(result.batch).to.equal(false);
     });
-    it('should parse simple input', function() {
+    it('should parse simple input', function () {
         const pipeline = {
             "name": "flow1",
             "nodes": [
@@ -318,7 +318,7 @@ describe('Parse', function() {
         expect(result.batch).to.equal(false);
         expect(result.input).to.deep.equal(["test"]);
     });
-    it('should parse empty input', function() {
+    it('should parse empty input', function () {
         const pipeline = {
             "name": "flow1",
             "nodes": [
@@ -335,17 +335,17 @@ describe('Parse', function() {
         expect(result.batch).to.equal(false);
         expect(result.input).to.deep.equal(node.input);
     });
-    it('should throw type error on string', function() {
+    it('should throw type error on string', function () {
         expect(() => {
             parser.parse("string");
         }).to.throw(TypeError, 'options');
     });
-    it('should throw type error on null', function() {
+    it('should throw type error on null', function () {
         expect(() => {
             parser.parse(null);
         }).to.throw(TypeError, 'options');
     });
-    it('should replaceFlowInput', function() {
+    it('should replaceFlowInput', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -386,7 +386,7 @@ describe('Parse', function() {
         expect(metadata[keys[2]].type).to.equal('boolean');
         expect(metadata[keys[3]].type).to.equal('object');
     });
-    it('should parse flowInput', function() {
+    it('should parse flowInput', function () {
         const pipeline = {
             name: "resultBatch",
             nodes: [
@@ -417,15 +417,15 @@ describe('Parse', function() {
         expect(key1).to.eql(key2);
         expect(result.batch).to.equal(false);
     });
-    it('should replaceNodeInput', function() {
+    it('should replaceNodeInput', function () {
         const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign');
         expect(result).to.eql(['@sign-yellow.data', '#@sign-green.batch']);
     });
-    it('should replaceNodeInput', function() {
+    it('should replaceNodeInput', function () {
         const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign', prefix = false);
         expect(result).to.eql(['@yellow.data-sign', '#@green.batch-sign']);
     });
-    it('should findNodeRelation', function() {
+    it('should findNodeRelation', function () {
         const result = parser.findNodeRelation([{ data: '*@yellow.data' }, { prop: '#@green.batch' }], consts.relations.WAIT_ANY);
         expect(result.type).to.eql(consts.relations.WAIT_ANY);
     });
