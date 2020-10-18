@@ -157,6 +157,39 @@ describe('Parse', function () {
         expect(result.input[0].storage[key]).to.have.property('path');
         expect(result.input[0].storage[key]).to.have.property('metadata');
     });
+    it('should parse node result of waitNode result', function () {
+        const pipeline = {
+            "name": "resultBatch",
+            "nodes": [
+                {
+                    "nodeName": "red",
+                    "algorithmName": "red-alg",
+                    "input": [
+                        "@yellow",
+                        512
+                    ]
+                }
+            ]
+        };
+        const parentResult = [{
+            metadata: {
+                yellow: { type: "array", size: 5 }
+            },
+            storageInfo: {
+                path: "batch-5b0b25a1-5364-4bd6"
+            }
+        },];
+        const node = pipeline.nodes[0];
+        const parentOutput = [{ node: 'yellow', type: consts.relations.WAIT_NODE, result: parentResult }];
+        const options = { nodeInput: node.input, parentOutput };
+        const result = parser.parse(options);
+        const key = Object.keys(result.storage)[0];
+        expect(result.batch).to.equal(false);
+        expect(result.input[0]).to.eql(`$$${key}`);
+        expect(result.storage[key][0]).to.have.property('storageInfo');
+        expect(result.storage[key][0]).to.have.property('path');
+        expect(result.storage[key][0]).to.have.property('metadata');
+    });
     it('should parse node result of waitAnyBatch result', function () {
         const pipeline = {
             name: "resultBatch",
@@ -335,6 +368,24 @@ describe('Parse', function () {
         expect(result.batch).to.equal(false);
         expect(result.input).to.deep.equal(node.input);
     });
+    it('should parse input with nulls', function () {
+        const input = [null, { prop: null }, [null], { a: { b: [null] } }];
+        const pipeline = {
+            "name": "flow1",
+            "nodes": [
+                {
+                    "nodeName": "white",
+                    "algorithmName": "black-alg",
+                    "input": [null, { prop: null }, [null], { a: { b: [null] } }]
+                }
+            ]
+        }
+        const node = pipeline.nodes[0];
+        const options = { nodeInput: node.input };
+        const result = parser.parse(options);
+        expect(result.batch).to.equal(false);
+        expect(result.input).to.deep.equal(input);
+    });
     it('should throw type error on string', function () {
         expect(() => {
             parser.parse("string");
@@ -344,47 +395,6 @@ describe('Parse', function () {
         expect(() => {
             parser.parse(null);
         }).to.throw(TypeError, 'options');
-    });
-    it('should replaceFlowInput', function () {
-        const pipeline = {
-            "name": "resultBatch",
-            "nodes": [
-                {
-                    "nodeName": "red",
-                    "algorithmName": "red-alg",
-                    "input": [
-                        "#@flowInput.files.links",
-                        { data: { prop: "@flowInput.x" } },
-                        "@flowInput.x",
-                        "@flowInput.y",
-                        "@flowInput",
-                        2,
-                        false,
-                        ["@flowInput"]
-                    ]
-                }
-            ],
-            "flowInput": {
-                "x": 3,
-                "y": false,
-                "files": {
-                    "links": [
-                        "links-1",
-                        "links-2",
-                        "links-3",
-                        "links-4",
-                        "links-5"
-                    ]
-                }
-            },
-        };
-        const metadata = parser.replaceFlowInput(pipeline);
-        const keys = Object.keys(metadata);
-        expect(metadata[keys[0]].type).to.equal('array');
-        expect(metadata[keys[0]].size).to.equal(5);
-        expect(metadata[keys[1]].type).to.equal('number');
-        expect(metadata[keys[2]].type).to.equal('boolean');
-        expect(metadata[keys[3]].type).to.equal('object');
     });
     it('should parse flowInput', function () {
         const pipeline = {

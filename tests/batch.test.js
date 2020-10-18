@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const { parser, consts } = require('../index');
 
-describe('Batch', function() {
-    it('should parse batch input as string', function() {
+describe('Batch', function () {
+    it('should parse batch input as string', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -47,7 +47,7 @@ describe('Batch', function() {
         expect(result.batch).to.equal(true);
         expect(result.input).to.have.lengthOf(5);
     });
-    it('should parse batch input which is not an array', function() {
+    it('should parse batch input which is not an array', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -74,7 +74,7 @@ describe('Batch', function() {
         const result = parser.parse(options);
         expect(result.batch).to.deep.equal(true);
     });
-    it('should parse batch input as object', function() {
+    it('should parse batch input as object', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -106,7 +106,7 @@ describe('Batch', function() {
         expect(result.batch).to.equal(true);
         expect(result.input).to.have.lengthOf(5);
     });
-    it('should parse batch input as array', function() {
+    it('should parse batch input as array', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -136,7 +136,7 @@ describe('Batch', function() {
         expect(result.batch).to.equal(true);
         expect(result.input).to.have.lengthOf(5);
     });
-    it('should parse batch input as complex array', function() {
+    it('should parse batch input as complex array', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -166,25 +166,43 @@ describe('Batch', function() {
         expect(result.batch).to.equal(true);
         expect(result.input).to.have.lengthOf(5);
     });
-    it('should parse batch input as raw', function() {
+    it('should parse batch input as raw with ranges', function () {
         const pipeline = {
             "nodes": [
                 {
                     "nodeName": "green",
                     "algorithmName": "green-alg",
                     "input": [
-                        "#[1,2,3,4,5]"
+                        "#[1, 2, 3, 4, 5, 1...10, 11,12, 20...30]"
                     ]
                 }
             ]
         }
         const firstNode = pipeline.nodes[0];
-        const options = Object.assign({}, { flowInputMetadata: pipeline.flowInputMetadata }, { nodeInput: firstNode.input });
+        const options = { flowInputMetadata: pipeline.flowInputMetadata, nodeInput: firstNode.input };
         const result = parser.parse(options);
         expect(result.batch).to.equal(true);
-        expect(result.input).to.have.lengthOf(5);
+        expect(result.input).to.have.lengthOf(28);
     });
-    it('should parse batch range input as raw', function() {
+    it('should parse batch input as raw with words', function () {
+        const pipeline = {
+            "nodes": [
+                {
+                    "nodeName": "green",
+                    "algorithmName": "green-alg",
+                    "input": [
+                        "#[hello, 1...10, world, 10...20]"
+                    ]
+                }
+            ]
+        }
+        const firstNode = pipeline.nodes[0];
+        const options = { flowInputMetadata: pipeline.flowInputMetadata, nodeInput: firstNode.input };
+        const result = parser.parse(options);
+        expect(result.batch).to.equal(true);
+        expect(result.input).to.have.lengthOf(23);
+    });
+    it('should parse batch range input as raw', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -200,9 +218,9 @@ describe('Batch', function() {
         const options = Object.assign({}, { flowInputMetadata: pipeline.flowInputMetadata }, { nodeInput: firstNode.input });
         const result = parser.parse(options);
         expect(result.batch).to.equal(true);
-        expect(result.input).to.have.lengthOf(100);
+        expect(result.input).to.have.lengthOf(101);
     });
-    it('should parse node result to batch', function() {
+    it('should parse node result to batch', function () {
         const pipeline = {
             "name": "resultBatch",
             "nodes": [
@@ -244,7 +262,7 @@ describe('Batch', function() {
         expect(result.batch).to.equal(true);
         expect(result.input).to.have.lengthOf(5);
     });
-    it('should parse batch input as indexed', function() {
+    it('should parse batch input as indexed', function () {
         const pipeline = {
             nodes: [
                 {
@@ -266,7 +284,7 @@ describe('Batch', function() {
         const options = { nodeInput: node.input, batchOperation: 'indexed' };
         const result = parser.parse(options);
         expect(result.batch).to.equal(true);
-        expect(result.input).to.have.lengthOf(10);
+        expect(result.input).to.have.lengthOf(11);
         expect(result.input[0].input[0].data1).to.equal(0);
         expect(result.input[0].input[3].data2).to.equal(10);
         expect(result.input[0].input[6].data3).to.equal(20);
@@ -282,9 +300,8 @@ describe('Batch', function() {
         expect(result.input[9].input[2].val2).to.equal("data2");
         expect(result.input[9].input[4]).to.equal("data1");
         expect(result.input[9].input[5]).to.equal("data2");
-
     });
-    it('should parse batch input as cartesian', function() {
+    it('should parse batch input as cartesian', function () {
         const pipeline = {
             nodes: [
                 {
@@ -303,17 +320,17 @@ describe('Batch', function() {
         const options = { nodeInput: node.input, batchOperation: 'cartesian' };
         const result = parser.parse(options);
         expect(result.batch).to.equal(true);
-        expect(result.input).to.have.lengthOf(100);
+        expect(result.input).to.have.lengthOf(121);
         expect(result.input[0].input[0].data1).to.equal(0);
         expect(result.input[0].input[1].val1).to.equal("data1");
         expect(result.input[0].input[2].val2).to.equal("data2");
         expect(result.input[0].input[3].data2).to.equal(100);
-        expect(result.input[99].input[0].data1).to.equal(9);
-        expect(result.input[99].input[1].val1).to.equal("data1");
-        expect(result.input[99].input[2].val2).to.equal("data2");
-        expect(result.input[99].input[3].data2).to.equal(109);
+        expect(result.input[100].input[0].data1).to.equal(9);
+        expect(result.input[100].input[1].val1).to.equal("data1");
+        expect(result.input[100].input[2].val2).to.equal("data2");
+        expect(result.input[100].input[3].data2).to.equal(101);
     });
-    it('should parse batch input as cartesian with flowInput', function() {
+    it('should parse batch input as cartesian with flowInput', function () {
         const pipeline = {
             nodes: [
                 {

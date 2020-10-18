@@ -1,9 +1,38 @@
 const { expect } = require('chai');
 const { parser } = require('../index');
 const storagePrefix = 'my-prefix';
+const ERROR = 'invalid input syntax, ex: @dataSource.<dataSourceName>/<fileName>';
 
 describe('DataSource', function () {
-    it('should extract DataSource metadata from the pipeline as string', function () {
+    it('should throw invalid input syntax', function () {
+        const pipeline = {
+            nodes: [
+                {
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: ["@dataSource"]
+                },
+            ],
+        };
+        expect(() => {
+            parser.extractDataSourceMetaData({ pipeline, storagePrefix })
+        }).to.throw(ERROR);
+    });
+    it('should throw invalid input syntax with dot', function () {
+        const pipeline = {
+            nodes: [
+                {
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: ["@dataSource.images"]
+                },
+            ],
+        };
+        expect(() => {
+            parser.extractDataSourceMetaData({ pipeline, storagePrefix })
+        }).to.throw(ERROR);
+    });
+    it('should extract dataSource metadata from the pipeline as string', function () {
         const pipeline = {
             nodes: [
                 {
@@ -18,48 +47,7 @@ describe('DataSource', function () {
             storageInfo: { path: `${storagePrefix}/images/file.jpg` }
         });
     });
-    it('should throw 1', function () {
-        const pipeline = {
-            nodes: [
-                {
-                    nodeName: "green",
-                    algorithmName: "green-alg",
-                    input: ["@dataSource"]
-                },
-            ],
-        };
-        expect(() => {
-            parser.extractDataSourceMetaData({ pipeline, storagePrefix })
-        }).to.throw(`invalid input syntax dataSource, ex: @dataSource.<name>/<fileName>`);
-    });
-    it('should throw 2', function () {
-        const pipeline = {
-            nodes: [
-                {
-                    nodeName: "green",
-                    algorithmName: "green-alg",
-                    input: ["@dataSource.images"]
-                },
-            ],
-        };
-        expect(() => {
-            parser.extractDataSourceMetaData({ pipeline, storagePrefix })
-        }).to.throw(`invalid input syntax dataSource.images, ex: @dataSource.<name>/<fileName>`);
-    });
-    xit('should extract DataSource metadata from the pipeline as string', function () {
-        const pipeline = {
-            nodes: [
-                {
-                    nodeName: "green",
-                    algorithmName: "green-alg",
-                    input: ["@dataSource.sda/df.jp"]
-                },
-            ],
-        };
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(results["dataSource.images/file.jpg"]).to.throw(`invalid input syntax ${entry}, ex: @dataSource.<name>/<fileName>`);
-    });
-    it('should extract DataSource metadata from the pipeline as object', function () {
+    it('should extract dataSource metadata from the pipeline as object', function () {
         const pipeline = {
             nodes: [
                 {
@@ -78,7 +66,7 @@ describe('DataSource', function () {
             }
         })
     });
-    it('should extract DataSource metadata from the pipeline as array', function () {
+    it('should extract dataSource metadata from the pipeline as array', function () {
         const pipeline = {
             "nodes": [
                 {
@@ -132,7 +120,6 @@ describe('DataSource', function () {
             }
         })
         expect(results['dataSource.images/file-3.jpg']).to.eql({
-
             storageInfo: {
                 path: "my-prefix/images/file-3.jpg"
             }
@@ -158,7 +145,7 @@ describe('DataSource', function () {
         expect(results["dataSource.images/file.jpg"]).to.exist;
         expect(results["flowInput.x"]).not.to.exist;
     });
-    it('should extract DataSource metadata from the pipeline as string', function () {
+    it('should parse with dataSource metadata', function () {
         const pipeline = {
             nodes: [
                 {
@@ -185,40 +172,19 @@ describe('DataSource', function () {
         expect(result.storage[keys[0]]).to.eql({ path: undefined, storageInfo: { path: `${storagePrefix}/images/file.jpg` } });
         expect(result.storage[keys[1]]).to.eql({ path: undefined, storageInfo: { path: `${storagePrefix}/videos/file.jpg` } });
     });
-    it.skip('should parse the dataSourceMetadata object to storage uuid', () => {
-
-        // it('should throw when check Flow Input', function() {
-        //     const pipeline = {
-        //         "nodes": [
-        //             {
-        //                 "nodeName": "green",
-        //                 "algorithmName": "green-alg",
-        //                 "input": [
-        //                     { data: "@datasource.images/file-1.jpg" }, //--> $$uuid
-        //                     { prop: { d: "@datasource.videos/file-2.jpg" } }
-        //                 ]
-        //             },
-        //         ],
-        //     };
-        //     const tmp = {
-        //         "datasourcesMetadata": [{
-        //                   metadata: { path: '0.data', datasource: 'name', pattern: 'name.jpg' }
-        //                   storageInfo: { path: 'hkube-datasources/images/file-1.jpg' }
-        //           }]
-        //     };
-
-        //     const output = {
-        //         "storage": {
-        //             "uuid": {
-        //                 storageInfo: { path: 'hkube-datasources/images/file-1.jpg' }
-        //             }
-        //         }
-        //     }
-
-        //     const ds = parser.parse({ prefix: 'hkube-datasources', pipeline });
-        //     // 1. create ds metadata
-        //     // 2. create storage $$ from metadata
-
-        // });
+    it('should parse without dataSource metadata', function () {
+        const pipeline = {
+            nodes: [
+                {
+                    nodeName: "green",
+                    algorithmName: "green-alg",
+                    input: ["@dataSource.videos/file.jpg", "@dataSource.images/file.jpg"]
+                },
+            ],
+        };
+        const node = pipeline.nodes[0];
+        const options = { nodeInput: node.input };
+        const result = parser.parse(options);
+        expect(result.input).to.eql([null, null]);
     });
 });
