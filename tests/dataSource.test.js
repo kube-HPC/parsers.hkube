@@ -42,10 +42,13 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(results["dataSource.images/file.jpg"]).to.eql({
-            storageInfo: { path: `${storagePrefix}/images/file.jpg`, dataSourceName: 'images' }
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        expect(metadata["dataSource.images/file.jpg"]).to.eql({
+            storageInfo: { path: `${storagePrefix}/images/file.jpg` },
         });
+        expect(dataSources).to.have.lengthOf(1);
+        expect(dataSources[0]).to.eq('images');
+
     });
     it('should extract dataSource metadata from the pipeline as object', function() {
         const pipeline = {
@@ -59,13 +62,13 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(results["dataSource.videos/file-2.jpg"]).to.eql({
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
                 path: "my-prefix/videos/file-2.jpg",
-                dataSourceName: 'videos'
-            }
+            },
         });
+        expect(dataSources).to.eql(['videos']);
     });
     it('should extract dataSource metadata from the pipeline as array', function() {
         const pipeline = {
@@ -79,13 +82,13 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(results["dataSource.videos/file-3.jpg"]).to.eql({
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        expect(metadata["dataSource.videos/file-3.jpg"]).to.eql({
             storageInfo: {
                 path: "my-prefix/videos/file-3.jpg",
-                dataSourceName: 'videos'
-            }
+            },
         });
+        expect(dataSources).to.eql(['videos']);
     });
     it('should extract metadata for more than one inputs and avoid duplicates', function() {
         const pipeline = {
@@ -109,26 +112,26 @@ describe('DataSource', function() {
             ],
         };
 
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(Object.values(results)).to.have.length(3);
-        expect(results['dataSource.images/file.jpg']).to.eql({
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        expect(Object.values(metadata)).to.have.length(3);
+        expect(metadata['dataSource.images/file.jpg']).to.eql({
             storageInfo: {
                 path: "my-prefix/images/file.jpg",
-                dataSourceName: 'images'
-            }
+            },
         });
-        expect(results["dataSource.videos/file-2.jpg"]).to.eql({
+        expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
                 path: "my-prefix/videos/file-2.jpg",
-                dataSourceName: 'videos'
-            }
+            },
         });
-        expect(results['dataSource.images/file-3.jpg']).to.eql({
+        expect(metadata['dataSource.images/file-3.jpg']).to.eql({
             storageInfo: {
                 path: "my-prefix/images/file-3.jpg",
-                dataSourceName: 'images'
-            }
+            },
         });
+        expect(dataSources).to.have.length(2);
+        expect(dataSources).to.include('videos');
+        expect(dataSources).to.include('images');
     });
     it('should handle both dataSource and flowInput', () => {
         const pipeline = {
@@ -146,9 +149,10 @@ describe('DataSource', function() {
                 x: 3,
             }
         };
-        const results = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
-        expect(results["dataSource.images/file.jpg"]).to.exist;
-        expect(results["flowInput.x"]).not.to.exist;
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        expect(metadata["dataSource.images/file.jpg"]).to.exist;
+        expect(metadata["flowInput.x"]).not.to.exist;
+        expect(dataSources[0]).to.eq('images');
     });
     it('should parse with dataSource metadata', function() {
         const pipeline = {
