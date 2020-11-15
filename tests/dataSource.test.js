@@ -44,7 +44,7 @@ describe('DataSource', function() {
         };
         const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
         expect(metadata["dataSource.images/file.jpg"]).to.eql({
-            storageInfo: { path: `${storagePrefix}/images/file.jpg` },
+            storageInfo: { dataSourceName: 'images', pattern: 'file.jpg', storagePrefix },
         });
         expect(dataSources).to.have.lengthOf(1);
         expect(dataSources[0]).to.eq('images');
@@ -65,7 +65,7 @@ describe('DataSource', function() {
         const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
         expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-2.jpg",
+                storagePrefix, dataSourceName: 'videos', pattern: 'file-2.jpg'
             },
         });
         expect(dataSources).to.eql(['videos']);
@@ -85,7 +85,7 @@ describe('DataSource', function() {
         const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
         expect(metadata["dataSource.videos/file-3.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-3.jpg",
+                dataSourceName: 'videos', pattern: 'file-3.jpg', storagePrefix
             },
         });
         expect(dataSources).to.eql(['videos']);
@@ -116,17 +116,17 @@ describe('DataSource', function() {
         expect(Object.values(metadata)).to.have.length(3);
         expect(metadata['dataSource.images/file.jpg']).to.eql({
             storageInfo: {
-                path: "my-prefix/images/file.jpg",
+                storagePrefix, dataSourceName: 'images', pattern: 'file.jpg'
             },
         });
         expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-2.jpg",
+                storagePrefix, dataSourceName: 'videos', pattern: 'file-2.jpg'
             },
         });
         expect(metadata['dataSource.images/file-3.jpg']).to.eql({
             storageInfo: {
-                path: "my-prefix/images/file-3.jpg",
+                storagePrefix, dataSourceName: 'images', pattern: 'file-3.jpg'
             },
         });
         expect(dataSources).to.have.length(2);
