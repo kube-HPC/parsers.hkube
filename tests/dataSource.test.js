@@ -15,7 +15,7 @@ describe('DataSource', function() {
             ],
         };
         expect(() => {
-            parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+            parser.extractDataSourceMetaData({ pipeline });
         }).to.throw(ERROR);
     });
     it('should throw invalid input syntax with dot', function() {
@@ -29,7 +29,7 @@ describe('DataSource', function() {
             ],
         };
         expect(() => {
-            parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+            parser.extractDataSourceMetaData({ pipeline });
         }).to.throw(ERROR);
     });
     it('should extract dataSource metadata from the pipeline as string', function() {
@@ -42,9 +42,9 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline });
         expect(metadata["dataSource.images/file.jpg"]).to.eql({
-            storageInfo: { path: `${storagePrefix}/images/file.jpg` },
+            storageInfo: { dataSourceName: 'images', pattern: 'file.jpg' },
         });
         expect(dataSources).to.have.lengthOf(1);
         expect(dataSources[0]).to.eq('images');
@@ -62,10 +62,10 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline });
         expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-2.jpg",
+                dataSourceName: 'videos', pattern: 'file-2.jpg'
             },
         });
         expect(dataSources).to.eql(['videos']);
@@ -82,10 +82,10 @@ describe('DataSource', function() {
                 },
             ],
         };
-        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline });
         expect(metadata["dataSource.videos/file-3.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-3.jpg",
+                dataSourceName: 'videos', pattern: 'file-3.jpg'
             },
         });
         expect(dataSources).to.eql(['videos']);
@@ -112,21 +112,21 @@ describe('DataSource', function() {
             ],
         };
 
-        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline });
         expect(Object.values(metadata)).to.have.length(3);
         expect(metadata['dataSource.images/file.jpg']).to.eql({
             storageInfo: {
-                path: "my-prefix/images/file.jpg",
+                dataSourceName: 'images', pattern: 'file.jpg'
             },
         });
         expect(metadata["dataSource.videos/file-2.jpg"]).to.eql({
             storageInfo: {
-                path: "my-prefix/videos/file-2.jpg",
+                dataSourceName: 'videos', pattern: 'file-2.jpg'
             },
         });
         expect(metadata['dataSource.images/file-3.jpg']).to.eql({
             storageInfo: {
-                path: "my-prefix/images/file-3.jpg",
+                dataSourceName: 'images', pattern: 'file-3.jpg'
             },
         });
         expect(dataSources).to.have.length(2);
@@ -149,7 +149,7 @@ describe('DataSource', function() {
                 x: 3,
             }
         };
-        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline, storagePrefix });
+        const { metadata, dataSources } = parser.extractDataSourceMetaData({ pipeline });
         expect(metadata["dataSource.images/file.jpg"]).to.exist;
         expect(metadata["flowInput.x"]).not.to.exist;
         expect(dataSources[0]).to.eq('images');
