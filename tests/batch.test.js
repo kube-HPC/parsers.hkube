@@ -307,6 +307,51 @@ describe('Batch', function () {
         expect(result.input).to.have.lengthOf(5);
         expect(Object.keys(result.input[0].storage)).to.have.lengthOf(2);
     });
+    it('should parse node result to batch in object - degenerated cartesian', function () {
+        const pipeline = {
+            "name": "resultBatch",
+            "nodes": [
+                {
+                    "nodeName": "yellow",
+                    "algorithmName": "yellow-alg",
+                    "input": [
+                        {
+                            "a": true,
+                            "b": "#@green",
+                            "c": "@flowInput.files.links"
+                        }
+                    ]
+                }
+            ],
+            "flowInputMetadata": {
+                "metadata": {
+                    "flowInput.files.links": { type: "array", size: 5 }
+                },
+                "storageInfo": {
+                    "path": "flowInput-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            }
+        };
+
+        const parentOutput = [{
+            node: 'green',
+            type: consts.relations.WAIT_BATCH,
+            result: {
+                "metadata": {
+                    "green": { type: "array", size: 5 }
+                },
+                "storageInfo": {
+                    "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            }
+        }];
+        const node = pipeline.nodes[0];
+        const options = Object.assign({ batchOperation: 'cartesian' }, { flowInputMetadata: pipeline.flowInputMetadata }, { nodeInput: node.input }, { parentOutput: parentOutput });
+        const result = parser.parse(options);
+        expect(result.batch).to.equal(true);
+        expect(result.input).to.have.lengthOf(5);
+        expect(Object.keys(result.input[0].storage)).to.have.lengthOf(2);
+    });
     it('should parse batch input as indexed', function () {
         const pipeline = {
             nodes: [
