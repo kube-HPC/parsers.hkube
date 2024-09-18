@@ -427,6 +427,84 @@ describe('Parse', function () {
         expect(key1).to.eql(key2);
         expect(result.batch).to.equal(false);
     });
+    it('should parse input with flow input and then list in batch', function () {
+        const pipeline = {
+            name: "resultBatch",
+            nodes: [
+                {
+                    "nodeName": "red",
+                    "algorithmName": "red-alg",
+                    "input": [
+                        {
+                            "flowlist": "#@flowInput.flowlist",
+                            "list": [
+                                4,
+                                5,
+                                6
+                            ]
+                        }
+                    ]
+                }
+            ],
+            flowInputMetadata: {
+                "metadata": {
+                    "flowInput.flowlist": { type: "array", size: 4 }
+                },
+                "storageInfo": {
+                    "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            }
+        };
+        const node = pipeline.nodes[0];
+        const options = { nodeInput: node.input, flowInputMetadata: pipeline.flowInputMetadata };
+        const result = parser.parse(options);
+        expect(result.batch).to.equal(true);
+        expect(result.input).to.have.lengthOf(4); // Checking there are 4 inputs of the batch
+        result.input.forEach((nodeInput) => { // Checking every node input
+            expect(nodeInput.input).to.have.lengthOf(1);
+            expect(Object.keys(nodeInput.input[0])).to.have.lengthOf(2);
+            expect(Object.keys(nodeInput.storage)).to.have.lengthOf(1);
+        });
+    });
+    it('should parse input with list and then flow input in batch', function () {
+        const pipeline = {
+            name: "resultBatch",
+            nodes: [
+                {
+                    "nodeName": "red",
+                    "algorithmName": "red-alg",
+                    "input": [
+                        {
+                            "list": [
+                                4,
+                                5,
+                                6
+                            ],
+                            "flowlist": "#@flowInput.flowlist"
+                        }
+                    ]
+                }
+            ],
+            flowInputMetadata: {
+                "metadata": {
+                    "flowInput.flowlist": { type: "array", size: 4 }
+                },
+                "storageInfo": {
+                    "path": "batch-5b0b25a1-5364-4bd6-b9b0-126de5ed2227"
+                }
+            }
+        };
+        const node = pipeline.nodes[0];
+        const options = { nodeInput: node.input, flowInputMetadata: pipeline.flowInputMetadata };
+        const result = parser.parse(options);
+        expect(result.batch).to.equal(true);
+        expect(result.input).to.have.lengthOf(4); // Checking there are 4 inputs of the batch
+        result.input.forEach((nodeInput) => { // Checking every node input
+            expect(nodeInput.input).to.have.lengthOf(1);
+            expect(Object.keys(nodeInput.input[0])).to.have.lengthOf(2);
+            expect(Object.keys(nodeInput.storage)).to.have.lengthOf(1);
+        });
+    });
     it('should replaceNodeInput', function () {
         const result = parser.replaceNodeInput(['@yellow.data', '#@green.batch'], 'sign');
         expect(result).to.eql(['@sign-yellow.data', '#@sign-green.batch']);
